@@ -1,7 +1,7 @@
 //Copyright 2010 by Victor Derevyanko, dvpublic0@gmail.com
 //http://code.google.com/p/dvsrc/
 //http://derevyanko.blogspot.com/2010/10/android-how-to.html
-//{$Id}
+//{$Id$}
 package com.rammus.taw;
 
 import java.util.HashMap;
