@@ -42,6 +42,11 @@ public class WidgetInstanceContent {
 		return CACHE_BITMAPS[this.FrameId];	
 	}
 	
+	//id1 is [1..11]
+	public static Bitmap GetCachedBitmapById(int id1) {
+		return  CACHE_BITMAPS[id1 - 1];
+	}
+	
 	  private static Bitmap drawable_to_bitmap(Drawable drw) {
 		  Bitmap bmp = Bitmap.createBitmap(
 		          drw.getIntrinsicWidth(), drw.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
