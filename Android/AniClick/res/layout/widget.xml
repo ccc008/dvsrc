@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:gravity="center" 
+	android:orientation="vertical" 
+	android:id="@+id/widget_layout"
+	android:layout_width="72dip"
+  	android:layout_height="72dip"
+	android:clickable="true">
+ <ImageView android:id="@+id/widget_image_view"
+    	android:scaleType="fitXY"
+    	android:layout_width="fill_parent" 
+    	android:layout_height="fill_parent" 
+    	android:layout_marginLeft="0.0dip"
+    	android:src="@drawable/a1"
+  />
+</RelativeLayout>

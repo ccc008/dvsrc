@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello, AniWidget!</string>
+    <string name="app_name">AniWidget</string>
+    <string name="widget_label">AniWidget</string>
+</resources>
