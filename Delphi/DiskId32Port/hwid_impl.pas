@@ -29,7 +29,7 @@ unit hwid_impl;
 // Original code can be taken here:
 // http://www.winsim.com/diskid32/diskid32.html
 
-//{$Id: hwid_impl.pas 451 2010-09-12 14:03:22Z dv $}
+//{$Id$}
 
 interface
 uses Windows, SysUtils;
