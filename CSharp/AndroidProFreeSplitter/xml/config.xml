@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+	Config file for AndroidProFreeSplitter.
+	Copyright 2010 by Victor Derevyanko, dvpublic0@gmail.com
+	http://code.google.com/p/dvsrc/
+-->
+<config>
+	<version type="pro">
+		<copy>
+			<include_directories>.*</include_directories>
+			<include_files>.*</include_files>				
+			<exclude_directories>.*\.svn|bin|gen</exclude_directories>
+			<exclude_files></exclude_files>
+		</copy>
+		<modify_content>
+			<include_files>.*\.java|.*\.xml</include_files>				
+			<exclude_files>.*free\.java|.*free\.xml</exclude_files>
+		</modify_content>
+		<package>
+		<!-- There are two ways to specify original package name: "manifest" and "const".
+			If you specify kind="manifest" then name of package will be taken from AndroidManifest.xml using xpath "./manifest/@package".
+			If you specify kind="const" then you should set correct package name in attribute @value.
+		-->
+			<get kind="manifest" value="your.package.name"/>
+		<!-- There are two ways to specify new package name: "postfix" and "const".
+			If you specify kind="postfix" then name of package will be built as: original name of package + postfix. Value of postfix should be set in attribute "@postfix"
+			If you specify kind="const" then you should set correct new package name in attribute @value.
+		-->
+			<set kind="postfix" postfix=".pro" value="your.package.name.pro"/> 	
+ 			<files>*.java;*.xml</files>
+		</package>
+		<content>		
+   		<replace>
+   			<files>*.java; *.xml</files>
+   			<regexp_search>com.mobilityflow.awidget</regexp_search>
+   			<regexp_replace>com.mobilityflow.awidget.pro</regexp_replace>
+   		</replace>
+   		<replace>
+   			<files>*.java</files>
+   			<regexp_search>//#startFREE</regexp_search>
+   			<regexp_replace>/*#startFREE</regexp_replace>
+   		</replace>
+   		<replace>
+   			<files>*.java</files>
+   			<regexp_search>//#endFREE</regexp_search>
+   			<regexp_replace>#endFREE*/</regexp_replace>
+   		</replace>
+   		<replace>
+   			<files>*.java</files>
+   			<regexp_search>GetFreeProId();</regexp_search>
+   			<regexp_replace>GetFreeProId();</regexp_replace>			
+   		</replace>
+   		<replace>
+   			<files>version.java</files>
+   			<regexp_search>public\s+static\s+final\s+boolean\s+IS_PRO\s*=\s*([^;]+);</regexp_search>
+   			<regexp_replace>public static final boolean IS_PRO = true;</regexp_replace>			
+   		</replace>
+   		<replace>
+   			<files>*.java</files>
+   			<regexp_search>([^\s+])_FreePro(\([^;])\s*;</regexp_search>
+   			<regexp_replace>$1_Pro$2;</regexp_replace>			
+   		</replace>
+		</content>
+	</version>
+</config>

@@ -1,0 +1,5 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <StartArguments>"c:\t\a1" "c:\t\a2" "Z:\projects\GoogleCode\dvsrc\CSharp\AndroidProFreeSplitter\xml\config.xml" pro</StartArguments>
+  </PropertyGroup>
+</Project>
