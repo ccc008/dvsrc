@@ -14,11 +14,17 @@ namespace apfsplitter {
             if (args.Length < 4) {
                 help();
                 return;
-            }            
-            VersionManager vm = new VersionManager(args[2], args[3]);
+            }
+            VersionManager vm = new VersionManager(args[2], args[3], extract_package_name(args[0] + "\\AndroidManifest.xml"));
 
-            Splitter sp = new Splitter(vm);
+            Splitter sp = new Splitter(vm, args[0]);
             sp.Split(args[0], args[1]);
+        }
+
+        static String extract_package_name(String fnAndroidManifest) {
+            XmlDocument xml = new XmlDocument();
+            xml.Load(fnAndroidManifest);
+            return xml.SelectSingleNode("./manifest/@package").InnerText;
         }
     }
 }

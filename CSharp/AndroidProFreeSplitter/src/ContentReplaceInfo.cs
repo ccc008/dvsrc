@@ -2,20 +2,28 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace apfsplitter {
+    public enum treplace_kinds {
+        REGEX
+        , DIRECT
+        , XML
+    }
     struct ContentReplaceInfo {
-        public ContentReplaceInfo(String filesMask, String searchString, String replaceString) {
-            this.FilesMask = filesMask;
+        private Regex m_RegExp;
+        public ContentReplaceInfo(String filesMask, String searchString, String replaceString, treplace_kinds kindReplace) {
+            m_RegExp = new Regex(Utils.FileMask2Regexp(filesMask));
             this.SearchString = searchString;
             this.ReplaceString = replaceString;
+            this.Kind = kindReplace;
         }
-        public readonly String FilesMask;
         public readonly String SearchString;
         public readonly String ReplaceString;
+        public readonly treplace_kinds Kind;
 
         public bool IsFileApplicable(String srcFileName) {
-            return true; //!TODO
+            return m_RegExp.Match(srcFileName).Success;
         }
 
     }

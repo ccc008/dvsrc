@@ -3,62 +3,179 @@
 	Config file for AndroidProFreeSplitter.
 	Copyright 2010 by Victor Derevyanko, dvpublic0@gmail.com
 	http://code.google.com/p/dvsrc/
+	$Id$
 -->
 <config>
 	<version type="pro">
+<!-- Files that should be copied from original project directory 
+-->
+		<copy>
+			<include_directories>*.*</include_directories>
+			<include_files>*.*</include_files>
+			<exclude_directories>*.svn;bin;gen</exclude_directories>
+			<exclude_files></exclude_files>
+		</copy>
+<!-- Files that should be modified accoridng rules "//content/replace" 		
+-->
+		<modify_content>
+			<include_files>*.java;*.xml;*.project</include_files>				
+			<exclude_files>*free.java;*free.xml</exclude_files>
+		</modify_content>
+
+<!-- Rule for modification package name. If postfix is not empty, then: 
+	1) package name will be modified: your.package.name -> your.package.name.postfix
+	2) files from src\your\package\name will be copied to directory src\your\package\name\pro
+-->
+		<package>
+			<postfix>pro</postfix> 
+ 			<include_files>*.java;*.xml</include_files>
+		</package>
+
+<!-- Rules for file content modification.
+	These rules are applied to all files specified in <modify_content>
+	It's possible to use to methods of search/replace: direct and regexp.
+	Regexp search is default. To use direct method, set attribute "regexp" to 0, i.e.
+   		<replace>
+   			<files>*.java</files>
+   			<search>//#startFREE</search>
+   			<replace>/*#startFREE</replace>
+				<regexp>0</regexp>				
+   		</replace> 
+-->
+		<content>		
+<!-- Support of pseudo "ifdef..endif" construction.
+The code:
+
+//#startFREE
+code 
+//#endFREE
+
+will be transformed to
+
+/*#startFREE
+code
+#endFREE*/
+-->
+   		<replace>
+   			<files>*.java</files>
+   			<search>//#startFREE</search>
+   			<replace>/*#startFREE</replace>
+				<kind>direct</kind>
+   		</replace>
+   		<replace>
+   			<files>*.java</files>
+   			<search>//#endFREE</search>
+   			<replace>#endFREE*/</replace>
+   		</replace>
+
+<!-- 	Rule to set correct value to constant Version.IS_PRO 
+-->
+   		<replace>
+   			<files>version.java</files>
+   			<search>public\s+static\s+final\s+boolean\s+IS_PRO\s*=\s*([^;]+);</search>
+   			<replace>public static final boolean IS_PRO = true;</replace>			
+   		</replace>
+
+<!-- 	Several rules to set correct resource id. Examples:
+		find_id(Version.GetFreeProId(R.id.free, R.id.pro);  -> find_id(R.id.free);
+		find_id(Version.GetFreeId(R.id.free); -> find_id(0);
+		find_id(Version.GetProId(R.id.pro); -> find_id(R.id.pro);
+-->
+   		<replace>
+   			<files>*.java</files>
+   			<search>Version.GetFreeProId\(\s*([^,]+)\s*,\s*([^,]+)\);</search>
+   			<replace>($2)</replace>			
+   		</replace>
+   		<replace>
+   			<files>*.java</files>
+   			<search>Version.GetFreeId\(\s*([^,]+)\s*\);</search>
+   			<replace>0</replace>			
+   		</replace>
+   		<replace>
+   			<files>*.java</files>
+   			<search>Version.GetProId\(\s*([^,]+)\s*\);</search>
+   			<replace>($1)</replace>			
+   		</replace>
+
+<!-- Transform FreePro calls to Pro calls: Example:
+		int a = MyFunction_FreePro(1, 2); -> int a = MyFunction_Pro(1, 2);
+-->
+   		<replace>
+   			<files>*.java</files>
+   			<search>([^\s+])_FreePro(\([^;])\s*;</search>
+   			<replace>$1_Pro$2;</replace>			
+   		</replace>
+
+			<replace>			
+				<files>strings.xml</files>
+				<search>//resources/string[@name="widget_label" or @name="app_name"]</search>
+				<replace>Animated Widget Pro</replace>			
+				<kind>xml</kind>
+			</replace>
+
+			<replace>			
+				<files>.project</files>
+				<search>projectDescription/name</search>
+				<replace>Animated Widget Pro</replace>			
+				<kind>xml</kind>
+			</replace>
+
+		</content>
+	</version>
+
+
+	<version type="free">
 		<copy>
 			<include_directories>.*</include_directories>
-			<include_files>.*</include_files>				
+			<include_files>.*</include_files>
 			<exclude_directories>.*\.svn|bin|gen</exclude_directories>
 			<exclude_files></exclude_files>
 		</copy>
 		<modify_content>
 			<include_files>.*\.java|.*\.xml</include_files>				
-			<exclude_files>.*free\.java|.*free\.xml</exclude_files>
+			<exclude_files>.*pro\.java|.*pro\.xml</exclude_files>
 		</modify_content>
 		<package>
-		<!-- There are two ways to specify original package name: "manifest" and "const".
-			If you specify kind="manifest" then name of package will be taken from AndroidManifest.xml using xpath "./manifest/@package".
-			If you specify kind="const" then you should set correct package name in attribute @value.
-		-->
-			<get kind="manifest" value="your.package.name"/>
-		<!-- There are two ways to specify new package name: "postfix" and "const".
-			If you specify kind="postfix" then name of package will be built as: original name of package + postfix. Value of postfix should be set in attribute "@postfix"
-			If you specify kind="const" then you should set correct new package name in attribute @value.
-		-->
-			<set kind="postfix" postfix=".pro" value="your.package.name.pro"/> 	
- 			<files>*.java;*.xml</files>
+			<postfix></postfix> 
+ 			<include_files>.*\.java|.*\.xml</include_files>
 		</package>
 		<content>		
    		<replace>
-   			<files>*.java; *.xml</files>
-   			<regexp_search>com.mobilityflow.awidget</regexp_search>
-   			<regexp_replace>com.mobilityflow.awidget.pro</regexp_replace>
+   			<files>*.java</files>
+   			<search>//#startPRO</search>
+   			<replace>/*#startPRO</replace>
+				<kind>direct</kind>
    		</replace>
    		<replace>
    			<files>*.java</files>
-   			<regexp_search>//#startFREE</regexp_search>
-   			<regexp_replace>/*#startFREE</regexp_replace>
-   		</replace>
-   		<replace>
-   			<files>*.java</files>
-   			<regexp_search>//#endFREE</regexp_search>
-   			<regexp_replace>#endFREE*/</regexp_replace>
-   		</replace>
-   		<replace>
-   			<files>*.java</files>
-   			<regexp_search>GetFreeProId();</regexp_search>
-   			<regexp_replace>GetFreeProId();</regexp_replace>			
+   			<search>//#endPRO</search>
+   			<replace>#endPRO*/</replace>
+				<kind>direct</kind>
    		</replace>
    		<replace>
    			<files>version.java</files>
-   			<regexp_search>public\s+static\s+final\s+boolean\s+IS_PRO\s*=\s*([^;]+);</regexp_search>
-   			<regexp_replace>public static final boolean IS_PRO = true;</regexp_replace>			
+   			<search>public\s+static\s+final\s+boolean\s+IS_PRO\s*=\s*([^;]+);</search>
+   			<replace>public static final boolean IS_PRO = false;</replace>			
    		</replace>
    		<replace>
    			<files>*.java</files>
-   			<regexp_search>([^\s+])_FreePro(\([^;])\s*;</regexp_search>
-   			<regexp_replace>$1_Pro$2;</regexp_replace>			
+   			<search>Version.GetFreeProId\(\s*([^,]+)\s*,\s*([^,]+)\);</search>
+   			<replace>($1)</replace>			
+   		</replace>
+   		<replace>
+   			<files>*.java</files>
+   			<search>Version.GetProId\(\s*([^,]+)\s*\);</search>
+   			<replace>0</replace>			
+   		</replace>
+   		<replace>
+   			<files>*.java</files>
+   			<search>Version.GetFreeId\(\s*([^,]+)\s*\);</search>
+   			<replace>($1)</replace>			
+   		</replace>
+   		<replace>
+   			<files>*.java</files>
+   			<search>([^\s+])_FreePro(\([^;])\s*;</search>
+   			<replace>$1_Free$2;</replace>			
    		</replace>
 		</content>
 	</version>

@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml;
 
 namespace apfsplitter {
     class Splitter {
-        private VersionManager m_Vm;
-        public Splitter(VersionManager vm) {
+        VersionManager m_Vm;
+        String m_PackageDirectory;
+        public Splitter(VersionManager vm, String srcDir) {
             m_Vm = vm;
+            m_PackageDirectory = vm.OriginalPackageName.Replace(".", "\\").ToLower();
         }
 
         public void Split(String srcDir, String destDir) {
@@ -18,7 +21,7 @@ namespace apfsplitter {
                 String fndest = destDir + "\\" + Path.GetFileName(src_file);
                 File.Copy(src_file, fndest, true);
 
-                if (!m_Vm.SkipProcessFile(srcDir, src_file)) {
+                if (!m_Vm.SkipProcessFile(srcDir, Path.GetFileName(src_file))) {
                     process_file(fndest);
                 }
             }
@@ -27,6 +30,10 @@ namespace apfsplitter {
                 if (m_Vm.SkipCopyDirectory(srcDir, Path.GetFileName(src_dir))) continue;
 
                 String dest_dir = destDir + "\\" + Path.GetFileName(src_dir);
+                if (dest_dir.ToLower().EndsWith(m_PackageDirectory)) {
+                    dest_dir = dest_dir + "\\" + m_Vm.AdditionalPrefixForPackageName.Replace(".", "\\");
+                }
+
                 Directory.CreateDirectory(dest_dir);
 
                 Split(src_dir, dest_dir);
@@ -37,11 +44,6 @@ namespace apfsplitter {
             //modify file content
             String content = File.ReadAllText(fileName);
 
-//             foreach (ContentDeleteInfo cdi in m_Vm.GetDeleteExpressions(versionTag)) {
-//                 if (cdi.IsFileApplicable(fileName)) {
-//                     content = delete_content(cdi, content);
-//                 }
-//             }
             foreach (ContentReplaceInfo cri in m_Vm.GetReplaceExpressions()) {
                 if (cri.IsFileApplicable(fileName)) {
                     content = replace_content(cri, content);
@@ -52,13 +54,22 @@ namespace apfsplitter {
         }
 
         String replace_content(ContentReplaceInfo cri, string srcContent) {
-            Regex r = new Regex(cri.SearchString);
-            return r.Replace(srcContent, cri.ReplaceString);
-        }
+            switch (cri.Kind) {
+                case treplace_kinds.REGEX:
+                    Regex r = new Regex(cri.SearchString); //!TODO: create it once
+                    return r.Replace(srcContent, cri.ReplaceString);
+                case treplace_kinds.DIRECT:
+                    return srcContent.Replace(cri.SearchString, cri.ReplaceString);
+                case treplace_kinds.XML:
+                    XmlDocument xml = new XmlDocument();
+                    xml.LoadXml(srcContent);
 
-//         String delete_content(ContentDeleteInfo cdi, string srcContent) {
-//             Regex r = new Regex(cri.SearchString);
-//             return r.Replace(srcContent, "");
-//         }
+                    foreach (XmlNode node in xml.SelectNodes(cri.SearchString)) {
+                        node.InnerText = cri.ReplaceString;
+                    }
+                    return xml.InnerXml;
+            }
+            return srcContent;
+        }
     }
 }
