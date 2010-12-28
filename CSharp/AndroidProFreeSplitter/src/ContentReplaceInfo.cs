@@ -13,7 +13,7 @@ namespace apfsplitter {
     struct ContentReplaceInfo {
         private Regex m_RegExp;
         public ContentReplaceInfo(String filesMask, String searchString, String replaceString, treplace_kinds kindReplace) {
-            m_RegExp = new Regex(Utils.FileMask2Regexp(filesMask));
+            m_RegExp = new Regex(Utils.FileMask2Regexp(filesMask), RegexOptions.IgnoreCase);
             this.SearchString = searchString;
             this.ReplaceString = replaceString;
             this.Kind = kindReplace;
