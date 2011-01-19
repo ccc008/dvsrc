@@ -64,7 +64,17 @@ namespace apfsplitter {
                     XmlDocument xml = new XmlDocument();
                     xml.LoadXml(srcContent);
 
-                    foreach (XmlNode node in xml.SelectNodes(cri.SearchString)) {
+                    XmlNamespaceManager xmlsm = new XmlNamespaceManager(xml.NameTable); 
+
+                    String url = cri.GetParam("xmlns_url");
+                    if (url != null) {
+                        String xmlns_name = cri.GetParam("xmlns_name");
+                        System.Diagnostics.Debug.Assert(xmlns_name != null);
+
+                        xmlsm.AddNamespace(xmlns_name, url);
+                    }
+
+                    foreach (XmlNode node in xml.SelectNodes(cri.SearchString, xmlsm)) {
                         node.InnerText = cri.ReplaceString;
                     }
                     return xml.InnerXml;

@@ -108,12 +108,22 @@ namespace apfsplitter {
             m_ListReplacements = new List<ContentReplaceInfo>();
             foreach (XmlNode node in m_VersionNode.SelectNodes("content/replace")) {
                 if (!is_replace_rule_applicable(node)) continue;
-                m_ListReplacements.Add(new ContentReplaceInfo(
+                ContentReplaceInfo ci = new ContentReplaceInfo(
                     node.SelectSingleNode("files").InnerText
                     , expand_macros(node.SelectSingleNode("search").InnerText)
                     , expand_macros(node.SelectSingleNode("replace").InnerText)
                     , get_kind(node, "kind", treplace_kinds.REGEX)
-                ));
+                );
+            //for some nodes we need additional params; f.e. for nodes with kind = xml user is able to specify namespaces
+                foreach (XmlNode xmlns_node in node.SelectNodes("xmlns")) {
+                    if (xmlns_node != null) {
+                        XmlNode name = xmlns_node.SelectSingleNode("@name");
+                        if (name == null) throw new Exception("Subnode 'xmlns' requests attribute 'name'");
+                        ci.SetAdditionalParam("xmlns_name", xmlns_node.SelectSingleNode("@name").InnerText);
+                        ci.SetAdditionalParam("xmlns_url", xmlns_node.InnerText);
+                    }
+                }
+                m_ListReplacements.Add(ci);
             }
             m_ListReplacements.Add(new ContentReplaceInfo(
                 m_VersionNode.SelectSingleNode("package/include_files").InnerText

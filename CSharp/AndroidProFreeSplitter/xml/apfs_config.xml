@@ -92,6 +92,17 @@ startBASE..endBASE are commented always independed on target version
 				<kind>direct</kind>
    		</replace>
 
+<!-- 	Rule to change icon from free to pro
+-->
+			<replace if="target:pro">			
+				<files>strings.xml</files>
+				<search>//manifest/application/@android:icon</search>
+				<replace>@drawable/icon_pro</replace>			
+				<kind>xml</kind>
+				<xmlns name="android">http://schemas.android.com/apk/res/android</xmlns>
+			</replace>
+
+
 <!-- 	Rule to set correct value to constant Version.IS_PRO 
 -->
    		<replace>
