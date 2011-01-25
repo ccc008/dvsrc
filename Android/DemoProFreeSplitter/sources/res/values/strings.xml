@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello_pro">Welcome to PRO version! There are no donate buttons on the screen and in the option menu.</string>
+    <string name="hello_free">Welcome to FREE version! There is donate button in option menu and donate button below this text.</string>
+    <string name="app_name">DemoProFreeSplitter</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <item type="id" name="mi_item1"/>
+    <item type="id" name="mi_item2"/>
+    <item type="id" name="mi_donate"/>
+    <item type="id" name="mi_market"/>
+</resources>
