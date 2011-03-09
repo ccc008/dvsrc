@@ -21,7 +21,7 @@ begin
       app.Caption := srcFileName;
       try
         app.ActiveDocument.Paragraphs.Add;  //modify document
-        app.Saved := False;
+//        app.Saved := False;
       finally
         //don't close document.
         //in this way we are emulating "hang" - word will suggest to save changes

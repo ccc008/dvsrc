@@ -2,7 +2,7 @@ unit WordThread;
 
 interface
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, SvcMgr, Dialogs, logfile, ExtCtrls, ActiveX;
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, SvcMgr, Dialogs, ExtCtrls, ActiveX;
 
 type
   TWordThread = class (TThread)
