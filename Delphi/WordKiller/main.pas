@@ -12,6 +12,8 @@ type
     procedure Timer1Timer(Sender: TObject);
     procedure ServiceStart(Sender: TService; var Started: Boolean);
   private
+    procedure kill_specified_process;
+    procedure kill_outdated_processes(timeMS: Integer);
     { Private declarations }
   public
     function GetServiceController: TServiceController; override;
@@ -53,6 +55,38 @@ begin
   Result := ServiceController;
 end;
 
+procedure TWordKillerService.kill_outdated_processes(timeMS: Integer);
+var
+  m_exe: TMatcher;
+  m_d: ProcessKiller.TPidOutdatedMatcher;
+begin
+  m_d := nil;
+  m_exe := TMatcher.Create('winword.exe');
+  try
+    m_d := TPidOutdatedMatcher.Create(timeMS);
+    ProcessKiller.FindAndKillProcessByPid(m_exe.EqualToI, m_d.IsOutdated);
+  finally
+    m_d.Free;
+    m_exe.Free;
+  end;
+end;
+
+procedure TWordKillerService.kill_specified_process;
+var
+  m_exe: TMatcher;
+  m_str: TMatcher;
+begin
+  m_str := nil;
+  m_exe := TMatcher.Create('winword.exe');
+  try
+    m_str := TMatcher.Create(m_srcFileName);
+    ProcessKiller.FindAndKillProcessByWindow(m_exe.EqualToI, m_str.EndWithI);
+  finally
+    m_exe.Free;
+    m_str.Free;
+  end;
+end;
+
 procedure TWordKillerService.ServiceStart(Sender: TService;
   var Started: Boolean);
 begin
@@ -61,23 +95,14 @@ begin
 end;
 
 procedure TWordKillerService.Timer1Timer(Sender: TObject);
-var m_exe: ProcessKiller.TMatcher;
-    m_str: ProcessKiller.TMatcher;
 begin
   m_Thread := TWordThread.Create(m_srcFileName);
   m_Thread.Start;
 
   Sleep(5000);
 
-  m_str := nil;
-  m_exe := TMatcher.Create('winword.exe');
-  try
-    m_str := TMatcher.Create(m_srcFileName);
-    ProcessKiller.FindAndKillProcessWithWindow(m_exe.EqualToI, m_str.EndWithI);
-  finally
-    m_exe.Free;
-    m_str.Free;
-  end;
+  kill_outdated_processes(100);
+  kill_specified_process;
 end;
 
 end.

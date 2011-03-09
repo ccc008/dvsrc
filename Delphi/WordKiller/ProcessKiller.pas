@@ -15,13 +15,26 @@ type
     m_Sample: String;
   end;
 
+  tpid_matcher_functor = function (srcPid: LongInt): Boolean of object;
+  ppid_matcher_functor = ^tpid_matcher_functor;
+
+  TPidOutdatedMatcher = class
+  public
+    constructor Create(intervalMS: Integer);
+    function IsOutdated(srcPid: LongInt): Boolean;
+  private
+    m_IntervalMS: Integer;
+  end;
+
 //find child process
 //enumerate windows in the process and find one with captionString in its caption
 //if window is found then the function kills the process
-procedure FindAndKillProcessWithWindow(
+procedure FindAndKillProcessByWindow(
   fMatchExeName: tmatch_functor; //selects process by exe filename
   fMatchWindowCaption: tmatch_functor  //selects window by window caption
 );
+
+procedure FindAndKillProcessByPid(fMatchExeName: tmatch_functor; fMatchPid: tpid_matcher_functor);
 
 //find all processes with exe file names that match to search criteria
 procedure GetListProcesses(fMatchExeName: tmatch_functor; dest: TStringList);
@@ -51,7 +64,26 @@ begin
   end;
 end;
 
-procedure FindAndKillProcessWithWindow(fMatchExeName: tmatch_functor; fMatchWindowCaption: tmatch_functor);
+procedure FindAndKillProcessByPid(fMatchExeName: tmatch_functor; fMatchPid: tpid_matcher_functor);
+var list: TStringList;
+    i: Integer;
+    pid: Cardinal;
+begin
+  list := TStringList.Create;
+  try
+    GetListProcesses(fMatchExeName, list);
+    for i := 0 to list.Count - 1 do begin
+      pid := Cardinal(list.Objects[i]);
+      if fMatchPid(pid) then begin
+        KillProcess(pid);
+      end;
+    end;
+  finally
+    list.Free;
+  end;
+end;
+
+procedure FindAndKillProcessByWindow(fMatchExeName: tmatch_functor; fMatchWindowCaption: tmatch_functor);
 var list: TStringList;
     i: Integer;
     pid: Cardinal;
@@ -123,6 +155,7 @@ begin //see http://stackoverflow.com/questions/4690472/error-invalid-handle-on-t
   if not TerminateProcess(process, fdwExit) then begin
     nerror := GetLastError;
   end;
+  CloseHandle(process);
 end;
 
 { TMatcher }
@@ -151,6 +184,39 @@ end;
 function TMatcher.EqualToI(srcName: PWideChar): Boolean;
 begin
   Result := lstrcmpi(srcName, PWideChar(m_Sample)) = 0;
+end;
+
+{ TPidOutdatedMatcher }
+constructor TPidOutdatedMatcher.Create(intervalMS: Integer);
+begin
+  m_IntervalMS := intervalMS;
+end;
+
+function TPidOutdatedMatcher.IsOutdated(srcPid: Integer): Boolean;
+var tc, te, tk, tu, current: FILETIME;
+    u0, u1: ULARGE_INTEGER;
+    process: THandle;
+    st: SYSTEMTIME;
+begin
+  Result := false;
+  process := OpenProcess(PROCESS_ALL_ACCESS, TRUE, srcPid);
+  try
+    if GetProcessTimes(process, tc, te, tk, tu) then begin
+      FileTimeToSystemTime(tc, st);
+      GetSystemTimeAsFileTime(current);
+
+      FileTimeToSystemTime(current, st);
+      u1.LowPart := current.dwLowDateTime;
+      u1.HighPart := current.dwHighDateTime;
+
+      u0.LowPart := tc.dwLowDateTime;
+      u0.HighPart := tc.dwHighDateTime;
+
+      if (u1.QuadPart - u0.QuadPart) / 10000 > m_IntervalMS then Result := true;
+    end;
+  finally
+    CloseHandle(process);
+  end;
 end;
 
 end.
