@@ -6,6 +6,38 @@ uses Windows, SysUtils, Classes, tlhelp32, Messages;
 type
   tmatch_functor = function (srcName: PWideChar): Boolean of object;
   pmatch_functor = ^tmatch_functor;
+
+  tpid_matcher_functor = function (srcPid: LongInt): Boolean of object;
+  ppid_matcher_functor = ^tpid_matcher_functor;
+
+//finds process  matched to fMatchExeName
+//enumerates windows in the process and finds one with captionString in its title bar
+//if window is found then the function kills the process
+function FindAndKillProcessByWindow(
+  fMatchExeName: tmatch_functor; //selects process by exe filename
+  fMatchWindowCaption: tmatch_functor  //selects window by window caption
+): Integer; overload;//returns count killed processes
+
+//finds process matched to fMatchExeName
+//checks its start time. If process is outdated then kills it.
+function FindAndKillProcessByPid(fMatchExeName: tmatch_functor; //selects process by exe filename
+  fMatchPid: tpid_matcher_functor //check PID and decide if process should be killed
+): Integer; overload;//returns count killed processes
+
+//**** simplified (and not flexible) versions of same functions
+function FindAndKillProcessByPid(
+  const processExeFileName: String;
+  const timeOutMs: Integer)
+: Integer; overload;
+
+function FindAndKillProcessByWindow(
+  const processExeFileName: String;
+  const strCaption: String)
+: Integer; overload;
+
+type
+//**** a couple of simple matchers to implement
+//simplified versions of FindAndKillProcessByPid and  FindAndKillProcessByWindow
   TMatcher = class
   public
     constructor Create(const sample: String);
@@ -15,9 +47,6 @@ type
     m_Sample: String;
   end;
 
-  tpid_matcher_functor = function (srcPid: LongInt): Boolean of object;
-  ppid_matcher_functor = ^tpid_matcher_functor;
-
   TPidOutdatedMatcher = class
   public
     constructor Create(intervalMS: Integer);
@@ -26,16 +55,7 @@ type
     m_IntervalMS: Integer;
   end;
 
-//find child process
-//enumerate windows in the process and find one with captionString in its caption
-//if window is found then the function kills the process
-procedure FindAndKillProcessByWindow(
-  fMatchExeName: tmatch_functor; //selects process by exe filename
-  fMatchWindowCaption: tmatch_functor  //selects window by window caption
-);
-
-procedure FindAndKillProcessByPid(fMatchExeName: tmatch_functor; fMatchPid: tpid_matcher_functor);
-
+//**** auxiliary functions:
 //find all processes with exe file names that match to search criteria
 procedure GetListProcesses(fMatchExeName: tmatch_functor; dest: TStringList);
 
@@ -64,11 +84,12 @@ begin
   end;
 end;
 
-procedure FindAndKillProcessByPid(fMatchExeName: tmatch_functor; fMatchPid: tpid_matcher_functor);
+function FindAndKillProcessByPid(fMatchExeName: tmatch_functor; fMatchPid: tpid_matcher_functor): Integer;
 var list: TStringList;
     i: Integer;
     pid: Cardinal;
 begin
+  Result := 0;
   list := TStringList.Create;
   try
     GetListProcesses(fMatchExeName, list);
@@ -76,6 +97,7 @@ begin
       pid := Cardinal(list.Objects[i]);
       if fMatchPid(pid) then begin
         KillProcess(pid);
+        inc(Result);
       end;
     end;
   finally
@@ -83,11 +105,12 @@ begin
   end;
 end;
 
-procedure FindAndKillProcessByWindow(fMatchExeName: tmatch_functor; fMatchWindowCaption: tmatch_functor);
+function FindAndKillProcessByWindow(fMatchExeName: tmatch_functor; fMatchWindowCaption: tmatch_functor): Integer;
 var list: TStringList;
     i: Integer;
     pid: Cardinal;
 begin
+  Result := 0;
   list := TStringList.Create;
   try
     GetListProcesses(fMatchExeName, list);
@@ -95,6 +118,7 @@ begin
       pid := Cardinal(list.Objects[i]);
       if FindWindowInProcess(pid, fMatchWindowCaption) then begin
         KillProcess(pid);
+        inc(Result);
       end;
     end;
   finally
@@ -218,5 +242,38 @@ begin
     CloseHandle(process);
   end;
 end;
+
+function FindAndKillProcessByPid(const processExeFileName: String; const timeOutMs: Integer): Integer;
+var
+  me: TMatcher;
+  md: ProcessKiller.TPidOutdatedMatcher;
+begin
+  md := nil;
+  me := TMatcher.Create(processExeFileName);
+  try
+    md := TPidOutdatedMatcher.Create(timeOutMs);
+    ProcessKiller.FindAndKillProcessByPid(me.EqualToI, md.IsOutdated);
+  finally
+    md.Free;
+    me.Free;
+  end;
+end;
+
+function FindAndKillProcessByWindow(const processExeFileName: String; const strCaption: String): Integer;
+var
+  me: TMatcher;
+  ms: TMatcher;
+begin
+  ms := nil;
+  me := TMatcher.Create(processExeFileName);
+  try
+    ms := TMatcher.Create(strCaption);
+    ProcessKiller.FindAndKillProcessByWindow(me.EqualToI, ms.EndWithI);
+  finally
+    me.Free;
+    ms.Free;
+  end;
+end;
+
 
 end.

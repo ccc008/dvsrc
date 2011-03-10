@@ -4,24 +4,33 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, SvcMgr, Dialogs, WordThread,
-  ExtCtrls;
+  ExtCtrls, inifileman;
+
+type
+  tconfig_params = record
+    ProcessExeFileName: String;
+    IntervalForCheckOutdatedProcessesSEC: Integer;
+    MaxAllowedTimeForProcessMS: Integer;
+    TestFindAndKillProcessByWindow: Boolean;
+    SrcFileNameForKillProcessByWindow: String;
+  end;
 
 type
   TWordKillerService = class(TService)
-    Timer1: TTimer;
-    procedure Timer1Timer(Sender: TObject);
+    TimerTestKillByWindow: TTimer;
+    TimerOutdatedProcesses: TTimer;
+    procedure TimerTestKillByWindowTimer(Sender: TObject);
     procedure ServiceStart(Sender: TService; var Started: Boolean);
+    procedure TimerOutdatedProcessesTimer(Sender: TObject);
   private
-    procedure kill_specified_process;
-    procedure kill_outdated_processes(timeMS: Integer);
+    procedure load_config;
     { Private declarations }
   public
     function GetServiceController: TServiceController; override;
     { Public declarations }
   private
-     m_Thread: TWordThread;
-     m_srcFileName: String;
-     m_destFileName: String;
+    m_Config: tconfig_params;
+    m_Thread: TWordThread;
   end;
 
 var
@@ -32,8 +41,6 @@ implementation
 uses ProcessKiller;
 
 {$R *.DFM}
-//'{604547EE-C3DA-4b5a-A13A-19A6C06BC82A}';
-
 function get_full_path_by_related_path(const FilePath: String): String;
 var s: String;
 begin
@@ -43,7 +50,6 @@ begin
   s := IncludeTrailingPathDelimiter(s);
   Result := s + FilePath;
 end;
-
 
 procedure ServiceController(CtrlCode: DWord); stdcall;
 begin
@@ -55,54 +61,61 @@ begin
   Result := ServiceController;
 end;
 
-procedure TWordKillerService.kill_outdated_processes(timeMS: Integer);
-var
-  m_exe: TMatcher;
-  m_d: ProcessKiller.TPidOutdatedMatcher;
-begin
-  m_d := nil;
-  m_exe := TMatcher.Create('winword.exe');
-  try
-    m_d := TPidOutdatedMatcher.Create(timeMS);
-    ProcessKiller.FindAndKillProcessByPid(m_exe.EqualToI, m_d.IsOutdated);
-  finally
-    m_d.Free;
-    m_exe.Free;
-  end;
-end;
-
-procedure TWordKillerService.kill_specified_process;
-var
-  m_exe: TMatcher;
-  m_str: TMatcher;
-begin
-  m_str := nil;
-  m_exe := TMatcher.Create('winword.exe');
-  try
-    m_str := TMatcher.Create(m_srcFileName);
-    ProcessKiller.FindAndKillProcessByWindow(m_exe.EqualToI, m_str.EndWithI);
-  finally
-    m_exe.Free;
-    m_str.Free;
-  end;
-end;
-
 procedure TWordKillerService.ServiceStart(Sender: TService;
   var Started: Boolean);
 begin
-  Timer1.Enabled := true;
-  m_srcFileName := get_full_path_by_related_path('testdata\src.doc');
+  load_config;
+  if m_Config.TestFindAndKillProcessByWindow then begin
+    TimerTestKillByWindow.Enabled := true;
+  end;
+  if m_Config.ProcessExeFileName <> '' then begin
+    TimerOutdatedProcesses.Interval := m_Config.IntervalForCheckOutdatedProcessesSEC;
+    TimerOutdatedProcesses.Enabled := true;
+  end;
 end;
 
-procedure TWordKillerService.Timer1Timer(Sender: TObject);
+procedure TWordKillerService.TimerOutdatedProcessesTimer(Sender: TObject);
 begin
-  m_Thread := TWordThread.Create(m_srcFileName);
+  ProcessKiller.FindAndKillProcessByPid(m_Config.ProcessExeFileName, m_Config.MaxAllowedTimeForProcessMS);
+end;
+
+procedure TWordKillerService.TimerTestKillByWindowTimer(Sender: TObject);
+begin
+  m_Thread := TWordThread.Create(m_Config.SrcFileNameForKillProcessByWindow);
   m_Thread.Start;
 
-  Sleep(5000);
-
-  kill_outdated_processes(100);
-  kill_specified_process;
+  Sleep(3000);
+  ProcessKiller.FindAndKillProcessByWindow('winword.exe', m_Config.SrcFileNameForKillProcessByWindow);
+  Sleep(3000);
 end;
+
+procedure TWordKillerService.load_config;
+    function read_int(const srcParamName: String; DefaultValue: Integer): Integer;
+    var svalue: String;
+    begin
+      svalue := ReadStrFrominifile(get_full_path_by_related_path('WordKiller.ini'), 'data', srcParamName);
+      if svalue = ''
+        then Result := DefaultValue
+        else Result := StrToInt(svalue);
+    end;
+    function read_str(const srcParamName: String; DefaultValue: String): String;
+    var svalue: String;
+    begin
+      svalue := ReadStrFrominifile(get_full_path_by_related_path('WordKiller.ini'), 'data', srcParamName);
+      if svalue = ''
+        then Result := DefaultValue
+        else Result := svalue;
+    end;
+begin
+  m_Config.ProcessExeFileName := read_str('ProcessExeFileName', 'winword.exe');
+  m_Config.IntervalForCheckOutdatedProcessesSEC := read_int('IntervalForCheckOutdatedProcessesSEC', 24*60*60);
+  m_Config.MaxAllowedTimeForProcessMS := read_int('MaxAllowedTimeForProcessMS', 10*60*1000);
+  m_Config.TestFindAndKillProcessByWindow := 0 <> read_int('TestFindAndKillProcessByWindow', 0);
+  m_Config.SrcFileNameForKillProcessByWindow := read_str('SrcFileNameForKillProcessByWindow', 'testdata\src.doc');
+  if ExtractFileDrive(m_Config.SrcFileNameForKillProcessByWindow) = '' then begin
+    m_Config.SrcFileNameForKillProcessByWindow := get_full_path_by_related_path(m_Config.SrcFileNameForKillProcessByWindow);
+  end;
+end;
+
 
 end.

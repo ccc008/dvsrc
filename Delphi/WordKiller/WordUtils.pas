@@ -17,6 +17,7 @@ begin
   try
     try
       app.Visible := true;
+      app.Caption := srcFileName;
       app.Documents.Open(srcFileName);
       app.Caption := srcFileName;
       try

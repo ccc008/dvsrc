@@ -4,11 +4,18 @@ object WordKillerService: TWordKillerService
   OnStart = ServiceStart
   Height = 150
   Width = 215
-  object Timer1: TTimer
+  object TimerTestKillByWindow: TTimer
     Enabled = False
     Interval = 15000
-    OnTimer = Timer1Timer
+    OnTimer = TimerTestKillByWindowTimer
     Left = 144
     Top = 40
+  end
+  object TimerOutdatedProcesses: TTimer
+    Enabled = False
+    Interval = 15000
+    OnTimer = TimerOutdatedProcessesTimer
+    Left = 16
+    Top = 16
   end
 end
