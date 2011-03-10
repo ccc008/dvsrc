@@ -1,3 +1,7 @@
+//Copyright 2009-2011 by Victor Derevyanko, dvpublic0@gmail.com
+//http://code.google.com/p/dvsrc/
+//{$Id$}
+
 unit WordUtils;
 //When the service is executed under local system user
 //the function SaveAs always raises exception "call was rejected by callee"
