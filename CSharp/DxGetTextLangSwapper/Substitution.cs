@@ -14,10 +14,11 @@ namespace DxGetTextLangSwapper {
         private static Regex m_RegexFilename = new Regex("(.+):(.*)", RegexOptions.Compiled); //CustomerFrame.dfm:64
         private static Regex m_RegexLocation = new Regex("(.+)\\.\\.(.+)\\s*", RegexOptions.Compiled); //Settings_Frame..SpeedButton2..Font.Name
         private static Regex m_RegexLocationResourceStrings = new Regex("Programmer's name for it:\\s*(.+)\\s*", RegexOptions.Compiled); //Programmer's name for it: LoginFrm_CancelBtn
+        private static Regex m_RegexGettextString = new Regex("_\\('([^']+)'\\)", RegexOptions.Compiled); //!TODO: '' is not supported here
 
         public String Msgid { get; private set; }
         public String Msgstr { get; private set; }
-            
+           
         public Substitution(String msgid, String msgstr, List<String> listDots, List<String> listColumns) {
             this.Msgid = msgid;
             this.Msgstr = msgstr;
@@ -62,9 +63,33 @@ namespace DxGetTextLangSwapper {
                 if (fileLines[info.Line - 1].Contains(srcStr)) {
                     fileLines[info.Line - 1] = fileLines[info.Line - 1].Replace(srcStr, String.Format("'{0}'", this.Msgstr));
                     counter_replaces += 1;
-                } 
+                } else if (Program.USE_BRUTOREPLACER) {
+                    Console.WriteLine("BRUTOREPLACER: {0} line {1}", fileName, info.Line);
+                    //most probably, we have problem with encodings here; so, we need find and change _(".*")
+                    BrutoforceEvaluator b = new BrutoforceEvaluator(this.Msgid, this.Msgstr);
+                    fileLines[info.Line - 1] = m_RegexGettextString.Replace(fileLines[info.Line - 1], b.Replace);
+                    this.Msgid = b.ReplacedContent;
+                    counter_replaces += 1;
+                }
             }
             return counter_replaces;
+        }
+
+        private class BrutoforceEvaluator {
+            private readonly String m_SrcStr;
+            private readonly String m_ReplaceBy;
+            public String ReplacedContent { get; private set; }
+            public BrutoforceEvaluator(String srcStr, String replaceBy) {
+                this.m_ReplaceBy = replaceBy;
+                this.m_SrcStr = srcStr;
+            }
+            public string Replace(Match m) {
+                Console.WriteLine("WARNING: Assume equality: ");
+                Console.WriteLine(m_SrcStr);
+                Console.WriteLine(m.Groups[1].Captures[0].ToString());
+                // this.ReplacedContent = m.Groups[1].Captures[0].ToString(); //replace text from PO filde by text from sources
+                return "_('" + m_ReplaceBy + "')";
+            }
         }
 
         public int Apply(String fileName, DFMWrapper dfm) {
@@ -74,7 +99,7 @@ namespace DxGetTextLangSwapper {
             int counter_replaces = 0;
             List<LocationInfo> entries = m_Files[fn];
             foreach (LocationInfo info in entries) {
-                counter_replaces += dfm.Replace(info.Path, info.PropertyName, Msgid, Msgstr);
+                counter_replaces += dfm.Replace(info.Path, info.PropertyName, Msgid, Msgstr, Program.USE_BRUTOREPLACER);
             }
             return counter_replaces;
         }

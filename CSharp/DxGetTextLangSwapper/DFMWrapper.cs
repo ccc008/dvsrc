@@ -17,10 +17,10 @@ namespace DxGetTextLangSwapper {
         private static Regex m_RegexObjectEnd = new Regex("$\\s*end\\s*^", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static Regex m_RegexPathSplitter = new Regex("\\.\\.", RegexOptions.Compiled);
         private static Regex m_RegexPropertyExtractor = new Regex("\\s*([^\\s]+)\\s*=\\s*(.+)\\s*", RegexOptions.Compiled);
-        private static Regex m_RegexUnqoute = new Regex("'(.+?)'", RegexOptions.Compiled);
+        private static Regex m_RegexUnqoute = new Regex("'(.+)'", RegexOptions.Compiled);
         private readonly String[] m_Lines;
         public DFMWrapper(String srcFileName) {
-            m_Lines = Utils.LoadStringsFromFile(srcFileName);
+            m_Lines = Utils.LoadStringsFromFile(srcFileName, Program.DFM_FILES_ENCODING);
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace DxGetTextLangSwapper {
         /// "path" has format like "A..B..C"
         /// Replaces propertyValue from msgId to msgStr IF AND ONLY IF the value equals to msgId
         /// </summary>        
-        public int Replace(String path, String propertyName, String msgId, String msgStr) {
+        public int Replace(String path, String propertyName, String msgId, String msgStr, bool bUseBrutoreplacer) {
             if (msgStr == "") {
                 return 0; //there is no tranlsation; skip it
             }
@@ -61,12 +61,21 @@ namespace DxGetTextLangSwapper {
                 if (kvp.Key == propertyName) {
                     String value = kvp.Value;
                     if (value.Length != 0 && value[0] == '\'') { //string value #1
-                        value = m_RegexUnqoute.Replace(value, "$1");
-                        if (value == msgId) {
+                        String unquoted_value = m_RegexUnqoute.Replace(value, "$1");
+                        if (unquoted_value == msgId) {
                             m_Lines[i] = m_Lines[i].Replace(msgId, msgStr);
                             return 1;
                         } else {
-                            System.Console.WriteLine("Warning: value is different, skip it; {0} {1}: '{2}' != '{3}'", path, propertyName, value, msgId);
+                            if (bUseBrutoreplacer) {
+                                System.Console.WriteLine("Warning: values are different {0} {1}: '{2}' != '{3}'", path, propertyName, value, msgId);
+                                System.Console.WriteLine("BRUTOREPLACER IS USED, assume equality:");
+                                System.Console.WriteLine(value);
+                                System.Console.WriteLine(msgId);
+                                m_Lines[i] = m_Lines[i].Replace(unquoted_value, msgStr);
+                                return 1;
+                            } else {
+                                System.Console.WriteLine("Warning: values are different, skip; {0} {1}: '{2}' != '{3}'", path, propertyName, value, msgId);
+                            }
                             return 0; //value is different; don't change it
                         }
                     } else if (value.StartsWith("(")) { //memo value, #3

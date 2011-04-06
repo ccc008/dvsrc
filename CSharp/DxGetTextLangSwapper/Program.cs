@@ -12,6 +12,17 @@ namespace DxGetTextLangSwapper
 {
     class Program
     {
+        public static int PO_FILE_ENCODING = 65001;
+        public static int PAS_FILES_ENCODING = 1252;
+        public static int DFM_FILES_ENCODING = 1252;
+
+        /// <summary>
+        /// Entries in PO file and source files can be different during encoding problem.
+        /// if BRUTOREPLACER turned on, then entry at specified text line is replaced always independent if actual value is equal to value from PO or isn't equal
+        /// and program outputs warning with detailed info.
+        /// </summary>
+        public static Boolean USE_BRUTOREPLACER = true;
+        
         static void help() {
             System.Console.WriteLine("DxGetTextLangSwapper <source directory> <source PO file> <target PO file>");
             System.Console.WriteLine("Helper for GNU Gettext for Delphi (http://dxgettext.po.dk/)");

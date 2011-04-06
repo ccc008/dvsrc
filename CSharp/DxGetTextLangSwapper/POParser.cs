@@ -21,7 +21,7 @@ namespace DxGetTextLangSwapper
         private static Regex m_rQuotedString= new Regex("^\"(.+?)\"$", RegexOptions.Compiled);
 
         public POParser(String fnPO) {
-            m_Lines = Utils.LoadStringsFromFile(fnPO);
+            m_Lines = Utils.LoadStringsFromFile(fnPO, Program.PO_FILE_ENCODING);
             m_Substitutions = load_po_content(fnPO, m_Lines);
         }
 
@@ -52,7 +52,7 @@ namespace DxGetTextLangSwapper
             }
         }
         private void apply_txt(String fileName) {
-            String[] lines = Utils.LoadStringsFromFile(fileName);
+            String[] lines = Utils.LoadStringsFromFile(fileName, Program.PAS_FILES_ENCODING);
             //String content = System.IO.File.ReadAllText(fileName);
 
             int count_replacements = 0;
@@ -130,10 +130,17 @@ namespace DxGetTextLangSwapper
                     }
                     break;
                 } while (true);
+// Strange example:
+// #. Nu skal vi gemme
+// #: frmLines.pas:257
+// #: frmLines.pas:259
+// msgid "Der opstod desvР¶rre en fejl under gem"
+// msgstr "There was an error while saving."
                 if (dots.Count != columns.Count  //dfm files
                     && dots.Count != 0 //pas files
                  ) {
-                    throw new Exception(String.Format("Count of #. and #: must be equal, file '{0}' line {1}", fnPO, nline));
+                     dots.Clear();
+                     Console.WriteLine(String.Format("Count of #. and #: must be equal, file '{0}' line {1}; dots are ignored", fnPO, nline));
                 }
                 if (columns.Count == 0) break; //end of file is reached
                 String msgid;
