@@ -76,8 +76,8 @@ namespace DxGetTextLangSwapper
             //swap msgid and msgstr for all substitutions that were successfully applied at least one time
             foreach (SubstitutionInfo si in m_Substitutions) {
                 if (si.SuccessfullyApplied) {
-                    m_Lines[si.MsgidLine] = "msgid = \"" + si.Substitution.Msgstr + "\"";
-                    m_Lines[si.MsgStrLine] = "msgstr = \"" + si.Substitution.Msgid + "\"";
+                    m_Lines[si.MsgidLine] = "msgid \"" + si.Substitution.Msgstr + "\"";
+                    m_Lines[si.MsgStrLine] = "msgstr \"" + si.Substitution.Msgid + "\"";
                 }
             }
 
