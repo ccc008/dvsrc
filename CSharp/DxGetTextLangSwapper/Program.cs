@@ -66,7 +66,7 @@ namespace DxGetTextLangSwapper
         static void Main(string[] args) {
             load_config_params();
 
-            if (args.Length < 4) {
+            if (args.Length < 3) {
                 help();
                 return;
             }
