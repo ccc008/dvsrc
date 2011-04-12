@@ -32,6 +32,11 @@ namespace DxGetTextLangSwapper
                 apply_txt(fileName);
             }
         }
+        internal void ReplaceComments(String fileName) {
+            //!TODO
+            throw new NotImplementedException();
+        }
+
         private void apply_dfm(String fileName) {
             System.Console.WriteLine("File: " + fileName);
             DFMWrapper dfm = new DFMWrapper(fileName);
@@ -216,5 +221,6 @@ namespace DxGetTextLangSwapper
                 this.SuccessfullyApplied = false; //at least one substitution was made, so lines MsgidLine and MsgStrLine should be swapped.
             }
         }
+
     }
 }
