@@ -61,7 +61,7 @@ namespace DxGetTextLangSwapper {
             foreach (LocationInfo info in entries) {
                 String srcStr = String.Format("'{0}'", this.Msgid);
                 if (fileLines[info.Line - 1].Contains(srcStr)) {
-                    fileLines[info.Line - 1] = fileLines[info.Line - 1].Replace(srcStr, String.Format("'{0}'", this.Msgstr);
+                    fileLines[info.Line - 1] = fileLines[info.Line - 1].Replace(srcStr, String.Format("'{0}'", this.Msgstr));
                     counter_replaces += 1;
                 } else if (Program.USE_BRUTOREPLACER) {
                     Console.WriteLine("BRUTOREPLACER: {0} line {1}", fileName, info.Line);
