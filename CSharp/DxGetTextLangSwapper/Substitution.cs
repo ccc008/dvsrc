@@ -23,10 +23,9 @@ namespace DxGetTextLangSwapper {
             this.Msgid = msgid;
             this.Msgstr = msgstr;
 
-            System.Diagnostics.Debug.Assert(listDots.Count == listColumns.Count || listDots.Count == 0);
             int i = 0;
             foreach (String column_string in listColumns) {
-                String dot = listDots.Count == 0 ? null : listDots[i];
+                String dot = listDots.Count <= i ? null : listDots[i];
                 ++i;
 
                 KeyValuePair<String, String> filename_line = extract_filename(column_string);
@@ -37,6 +36,7 @@ namespace DxGetTextLangSwapper {
                 }
                 List<LocationInfo> entries = m_Files[filename];
                 bool is_pas_file = System.IO.Path.GetExtension(filename).ToLower() == ".pas";
+
                 if (!is_pas_file && dot == null) {
                     throw new Exception("Location isn't specified: " + filename + " " + column_string);
                 }

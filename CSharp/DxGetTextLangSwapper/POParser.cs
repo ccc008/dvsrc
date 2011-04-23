@@ -14,11 +14,12 @@ namespace DxGetTextLangSwapper
     class POParser {
         private readonly List<SubstitutionInfo> m_Substitutions;
         private readonly String[] m_Lines;
-        private static Regex m_rDot = new Regex(@"#\.\s*(.+)", RegexOptions.Compiled);
-        private static Regex m_rColumn = new Regex(@"#\:\s*(.+)", RegexOptions.Compiled);
-        private static Regex m_rMsgid = new Regex("msgid\\s+\"(.*)\"", RegexOptions.Compiled);
-        private static Regex m_rMsgstr = new Regex("msgstr\\s+\"(.*)\"", RegexOptions.Compiled);
+        private static Regex m_rDot = new Regex(@"^#\.\s*(.+)", RegexOptions.Compiled);
+        private static Regex m_rColumn = new Regex(@"^#\:\s*(.+)", RegexOptions.Compiled);
+        private static Regex m_rMsgid = new Regex("^msgid\\s+\"(.*)\"", RegexOptions.Compiled);
+        private static Regex m_rMsgstr = new Regex("^msgstr\\s+\"(.*)\"", RegexOptions.Compiled);
         private static Regex m_rQuotedString= new Regex("^\"(.+?)\"$", RegexOptions.Compiled);
+        private static Regex m_rFuzzy = new Regex("^#,\\s+fuzzy\\s*", RegexOptions.Compiled);
 
         public POParser(String fnPO) {
             m_Lines = Utils.LoadStringsFromFile(fnPO, Program.PO_FILE_ENCODING);
@@ -132,21 +133,19 @@ namespace DxGetTextLangSwapper
                         columns.Add(content);
                         ++nline;
                         continue;
+                    } 
+                    if (is_line_fuzzy(lines[nline]) ) { //lines like "#, fuzzy"
+                        ++nline;
+                        continue;
                     }
                     break;
                 } while (true);
-// Strange example:
+// PO files is able to contain ant DONT contain dot line for pas files. Example:
 // #. Nu skal vi gemme
 // #: frmLines.pas:257
 // #: frmLines.pas:259
 // msgid "Der opstod desvР¶rre en fejl under gem"
 // msgstr "There was an error while saving."
-                if (dots.Count != columns.Count  //dfm files
-                    && dots.Count != 0 //pas files
-                 ) {
-                     dots.Clear();
-                     Console.WriteLine(String.Format("Count of #. and #: must be equal, file '{0}' line {1}; dots are ignored", fnPO, nline));
-                }
                 if (columns.Count == 0) break; //end of file is reached
                 String msgid;
                 if (!is_line_msgid(lines[nline++], out msgid)) {
@@ -185,6 +184,10 @@ namespace DxGetTextLangSwapper
             } while (m.Success);
 
             return dest;
+        }
+
+        private bool is_line_fuzzy(string line) {
+            return m_rFuzzy.Match(line).Success;
         }
 
         private bool is_line_dot(string line, out String content) {
