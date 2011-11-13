@@ -1325,7 +1325,7 @@ begin
    Write(Format ('Drive Serial Number_______________: [%s]'+#$0D#$0A, [serialNumber]));
    Write(Format ('Drive Controller Revision Number__: [%s]'+#$0D#$0A, [revisionNumber]));
 
-   Write(Format ('Controller Buffer Size on Drive___: %s bytes'+#$0D#$0A, [bufferSize]));
+   //Write(Format ('Controller Buffer Size on Drive___: %s bytes'+#$0D#$0A, [bufferSize]));
 
    Write('Drive Type________________________: ');
    if (0 <> (diskdata [0] and $0080)) then Writeln('Removable')
