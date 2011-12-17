@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"   
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+	android:id="@+id/dialog_multy_selector" 
+	android:background="#ffffff"
+>
+
+<LinearLayout android:id="@+id/unidialog_layout_ok_cancel" 
+	android:background="#C2C2C2" 
+	android:orientation="horizontal"
+	android:gravity="center_vertical" 
+	android:layout_alignParentBottom="true"	
+	android:layout_weight="1" 
+	android:layout_width="fill_parent" 
+	android:layout_height="60dip">
+	<Button  android:id="@+id/unidialog_button_ok"
+		android:text="Ok" 		
+		android:gravity="center" 
+		android:layout_gravity="center_vertical"
+		android:layout_weight="1"
+		android:layout_marginRight="5dip"
+		android:layout_marginLeft="5dip" 
+		android:layout_centerVertical="true"
+		android:layout_width="fill_parent" 
+		android:layout_height="50dip">
+	</Button>
+	<Button android:id="@+id/unidialog_button_cancel" 
+		android:text="Cancel" 
+		android:layout_weight="1"
+		android:layout_marginRight="5dip"
+		android:layout_marginLeft="5dip" 
+		android:layout_centerVertical="true"
+		android:gravity="center" 
+		android:layout_gravity="center_vertical"
+		android:layout_width="fill_parent" 
+		android:layout_height="50dip">
+	</Button>
+</LinearLayout>
+
+<LinearLayout
+	android:id="@+id/unidialog_pageview" 
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:focusable="true" 
+    android:focusableInTouchMode="true"
+    android:orientation="vertical"
+    android:layout_above="@id/unidialog_layout_ok_cancel" 
+>
+<ListView
+	android:id="@+id/unidialog_listview" 
+	android:layout_height="wrap_content"
+	android:layout_width="fill_parent"
+  android:scrollbarStyle="outsideOverlay"
+  android:cacheColorHint="#FFFFFFFF"
+  android:fastScrollEnabled="true"  	    
+  android:smoothScrollbar="true"/>
+  
+</LinearLayout>
+
+</RelativeLayout>
+
