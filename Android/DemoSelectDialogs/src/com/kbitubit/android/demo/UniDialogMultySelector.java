@@ -1,5 +1,10 @@
 package com.kbitubit.android.demo;
 
+//UniDialog implementation
+//Copyright 2011 by Victor Derevyanko, dvpublic0@gmail.com
+//http://derevyanko.blogspot.com/2011/12/android.html
+//http://code.google.com/p/dvsrc/downloads/detail?name=20111217DemoSelectDialog.7z&can=2&q=#makechanges
+
 import com.kbitubit.android.demo.R;
 import com.kbitubit.android.demo.UniDialogUtils.ViewHolder;
 
