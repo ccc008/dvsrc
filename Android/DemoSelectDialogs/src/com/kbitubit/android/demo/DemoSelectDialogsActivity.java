@@ -114,8 +114,8 @@ public class DemoSelectDialogsActivity extends Activity {
 	/** Show list of CustomDataItem*/
 	private void show_multy_dialog_1() {
 		UniDialogUtils.DialogConfig dc = new UniDialogUtils.DialogConfig(items[2]
-		        , true //UniDialogUtils.SimplestDataItem supports images
-				, true //UniDialogUtils.SimplestDataItem supports desctiptions
+		        , true //CustomDataItem supports images
+				, false //CustomDataItem doesn't support desctiptions
 		);
 		ArrayList<CustomDataItem> list_subitems = new ArrayList<CustomDataItem>();
 		for (int i = 0; i < sub_items.length; ++i) {
@@ -136,8 +136,8 @@ public class DemoSelectDialogsActivity extends Activity {
 	/** Show list of SimplestDataItem*/
 	private void show_multy_dialog_2() {
 		UniDialogUtils.DialogConfig dc = new UniDialogUtils.DialogConfig(items[3]
-		        , true //CustomDataItem supports images
-				, false //CustomDataItem doesn't support desctiptions
+		        , true //UniDialogUtils.SimplestDataItem supports images
+				, true //UniDialogUtils.SimplestDataItem supports desctiptions
 		);
 		ArrayList<UniDialogUtils.SimplestDataItem> list_subitems = new ArrayList<UniDialogUtils.SimplestDataItem>();
 		for (int i = 0; i < sub_items.length; ++i) {
