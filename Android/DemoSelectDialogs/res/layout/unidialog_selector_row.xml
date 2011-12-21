@@ -33,7 +33,7 @@
 	/>
 	<TextView android:id="@+id/unidialog_description"
 	    android:layout_alignParentLeft="true" 
-		android:layout_below="@id/unidialog_image"
+		android:layout_below="@id/unidialog_text"
 		android:layout_height="wrap_content"
 		android:textSize="12dip"
 		android:layout_marginRight="5dip"
