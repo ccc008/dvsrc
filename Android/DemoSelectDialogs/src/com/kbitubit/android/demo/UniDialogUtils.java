@@ -15,6 +15,9 @@ public class UniDialogUtils {
 	
 	/** Configuration of the dialog */
 	public static class DialogConfig {
+		public DialogConfig(String dialogTitle) {
+			this(dialogTitle, false, false);
+		}
 		public DialogConfig(String dialogTitle, boolean supportImages, boolean supportDescriptions) {
 			this.DialogTitle = dialogTitle;
 			this.EnableImages = supportImages;
@@ -55,6 +58,9 @@ public class UniDialogUtils {
 			this.Id = srcId;
 			this.Tag = tag;
 			this.Description = description;
+		}
+		public SimplestDataItem(int srcId, String title, Bitmap bmp, Object tag) {
+			this(srcId, title, bmp, tag, null);
 		}
 		@Override public String toString() {				
 			return this.Title;
@@ -102,7 +108,7 @@ public class UniDialogUtils {
 			if (dialogConfig.EnableImages && di instanceof UniDialogUtils.ItemImageProvider) {
 				holder.ImageView.setImageBitmap(((UniDialogUtils.ItemImageProvider)di).getImage());
 			}
-			if (dialogConfig.EnableImages && di instanceof UniDialogUtils.ItemDescriptionProvider) {
+			if (dialogConfig.EnableDescriptions && di instanceof UniDialogUtils.ItemDescriptionProvider) {
 				holder.DescriptionView.setText(((UniDialogUtils.ItemDescriptionProvider)di).getDescription());
 			}
 		}
