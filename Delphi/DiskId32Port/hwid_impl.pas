@@ -462,7 +462,7 @@ PIDENTIFY_DATA = ^IDENTIFY_DATA;
 
 
 
-function ReadPhysicalDriveInNTUsingSmart(var Dest: tresults_array_dv): Boolean;
+function  (var Dest: tresults_array_dv): Boolean;
 var
   drive: Integer;
   hPhysicalDriveIOCTL: THandle;
@@ -514,60 +514,67 @@ begin
         end;
 {$ENDIF}
       end else begin
-         //-GETVERSIONINPARAMS GetVersionParams;
-         cbBytesReturned := 0;
+        try  //dv: fix 20120115
+           //-GETVERSIONINPARAMS GetVersionParams;
+           cbBytesReturned := 0;
 
-            // Get the version, etc of PhysicalDrive IOCTL
-         FillMemory (@GetVersionParams, sizeof(GetVersionParams), 0);
+              // Get the version, etc of PhysicalDrive IOCTL
+           FillMemory (@GetVersionParams, sizeof(GetVersionParams), 0);
 
-         if (not DeviceIoControl (hPhysicalDriveIOCTL, SMART_GET_VERSION, nil, 0,
-     			   @GetVersionParams, sizeof (GETVERSIONINPARAMS), cbBytesReturned, nil) )
-         then begin
-{$ifdef PRINTING_TO_CONSOLE_ALLOWED}
-          if (PRINT_DEBUG) then begin
-	          Write(Format(#$0D#$0A+'%d ReadPhysicalDriveInNTUsingSmart ERROR' +
-		               #$0D#$0A+'DeviceIoControl(%d, SMART_GET_VERSION) returned 0, error is %d'+#$0D#$0A
-                   , [0 //__LINE__
-                      , Integer(hPhysicalDriveIOCTL), Integer(GetLastError)]));
-		      end
-{$ENDIF}
-         end else begin
-			 	// Print the SMART version
-           	// PrintVersion (& GetVersionParams);
-	           // Allocate the command buffer
-    			CommandSize := sizeof(SENDCMDINPARAMS) + IDENTIFY_BUFFER_SIZE;
-        	GetMem(PSENDCMDINPARAMS(Command), CommandSize);
-          try
-	           // Retrieve the IDENTIFY data
-	           // Prepare the command
-//-#define ID_CMD          0xEC            // Returns ID sector for ATA
-            Command^.irDriveRegs.bCommandReg := ID_CMD;
-            BytesReturned := 0;
-            if (not DeviceIoControl (hPhysicalDriveIOCTL, SMART_RCV_DRIVE_DATA, Command, sizeof(SENDCMDINPARAMS),
-                    Command, CommandSize, BytesReturned, nil) ) then begin
-              // Print the error
-              // PrintError ("SMART_RCV_DRIVE_DATA IOCTL", GetLastError());
-            end else begin
-              // Print the IDENTIFY data
-              //-DWORD diskdata [256];
+           if (not DeviceIoControl (hPhysicalDriveIOCTL, SMART_GET_VERSION, nil, 0,
+               @GetVersionParams, sizeof (GETVERSIONINPARAMS), cbBytesReturned, nil) )
+           then begin
+  {$ifdef PRINTING_TO_CONSOLE_ALLOWED}
+            if (PRINT_DEBUG) then begin
+              Write(Format(#$0D#$0A+'%d ReadPhysicalDriveInNTUsingSmart ERROR' +
+                     #$0D#$0A+'DeviceIoControl(%d, SMART_GET_VERSION) returned 0, error is %d'+#$0D#$0A
+                     , [0 //__LINE__
+                        , Integer(hPhysicalDriveIOCTL), Integer(GetLastError)]));
+            end
+  {$ENDIF}
+           end else begin
+          // Print the SMART version
+              // PrintVersion (& GetVersionParams);
+               // Allocate the command buffer
+            CommandSize := sizeof(SENDCMDINPARAMS) + IDENTIFY_BUFFER_SIZE;
+            GetMem(PSENDCMDINPARAMS(Command), CommandSize);
+            try
+               // Retrieve the IDENTIFY data
+               // Prepare the command
+  //-#define ID_CMD          0xEC            // Returns ID sector for ATA
+              Command^.irDriveRegs.bCommandReg := ID_CMD;
+              BytesReturned := 0;
+              if (not DeviceIoControl (hPhysicalDriveIOCTL, SMART_RCV_DRIVE_DATA, Command, sizeof(SENDCMDINPARAMS),
+                      Command, CommandSize, BytesReturned, nil) ) then begin
+                // Print the error
+                // PrintError ("SMART_RCV_DRIVE_DATA IOCTL", GetLastError());
+              end else begin
+                // Print the IDENTIFY data
+                //-DWORD diskdata [256];
 
-              //=USHORT *pIdSector = (USHORT *)(PIDENTIFY_DATA) ((PSENDCMDOUTPARAMS) Command) -> bBuffer;
-              pIdSector := PWord(PIDENTIFY_DATA(@PSENDCMDOUTPARAMS(Command)^.bBuffer[0])); //!TOCHECK
+                //=USHORT *pIdSector = (USHORT *)(PIDENTIFY_DATA) ((PSENDCMDOUTPARAMS) Command) -> bBuffer;
+                pIdSector := PWord(PIDENTIFY_DATA(@PSENDCMDOUTPARAMS(Command)^.bBuffer[0])); //!TOCHECK
 
 
-              for ijk := 0 to 256-1 do begin
-                diskdata [ijk] := parray_of_words256_dv(pIdSector)[ijk];
+                for ijk := 0 to 256-1 do begin
+                  diskdata [ijk] := parray_of_words256_dv(pIdSector)[ijk];
+                end;
+
+                Dest[count_drives_dv] := PrintIdeInfo (drive, diskdata);
+                inc(count_drives_dv);
               end;
-
-              Dest[count_drives_dv] := PrintIdeInfo (drive, diskdata);
-              inc(count_drives_dv);
+              // Done
+              //dv: fix 20120115:
+              //This CloseHanle is skipped if DeviceIoControl returns error.
+              //So, CloseHandle must be called in finally, see below
+              // CloseHandle(hPhysicalDriveIOCTL);
+            finally
+              FreeMem(Command, CommandSize);
             end;
-            // Done
-            CloseHandle(hPhysicalDriveIOCTL);
-          finally
-		    	  FreeMem(Command, CommandSize);
-          end;
-  		 end
+         end
+      finally
+        CloseHandle(hPhysicalDriveIOCTL); //dv: fix 20120115:
+      end;
      end
    end;
 
