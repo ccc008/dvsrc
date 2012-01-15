@@ -462,7 +462,7 @@ PIDENTIFY_DATA = ^IDENTIFY_DATA;
 
 
 
-function  (var Dest: tresults_array_dv): Boolean;
+function ReadPhysicalDriveInNTUsingSmart (var Dest: tresults_array_dv): Boolean;
 var
   drive: Integer;
   hPhysicalDriveIOCTL: THandle;
