@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rules>
+	<rule origin="en\strings.xml"
+		copyto="res\values-##LANG##\strings.xml"
+	/>
+	<rule origin="en\quick_start.htm"
+		copyto="assets\quick_start_##LANG##.htm"
+	/>
+
+	<lang id="thl-AA" renameTo=""/> <!-- = ignore this language-->
+	<lang id="zh-CN" renameTo="zh"/>
+</rules>
