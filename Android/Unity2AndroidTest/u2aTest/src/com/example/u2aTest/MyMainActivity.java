@@ -49,6 +49,18 @@ public class MyMainActivity extends UnityPlayerActivity {
 		return paramValue;
 	}
 	
+	public int testInt(int intValue) {
+		Kernel.logInfo("MyMainActivity.testInt:" + intValue);
+		return intValue;
+	}
+	public long testLong(long longValue) {
+		Kernel.logInfo("MyMainActivity.testInt:" + longValue);
+		return longValue;
+	}
+	public int testInteger(Integer intValue) {
+		Kernel.logInfo("MyMainActivity.testInt:" + intValue);
+		return intValue;
+	}
 	
 	
 	public static void testVoidStatic() {
@@ -66,6 +78,10 @@ public class MyMainActivity extends UnityPlayerActivity {
 	public static Object testObjectObjectStatic(Object paramValue) {
 		Kernel.logInfo("MyMainActivity.testObjectObjectStatic:" + paramValue.toString());
 		return paramValue;
+	}
+	public static int testIntStatic(int intValue) {
+		Kernel.logInfo("MyMainActivity.testIntStatic:" + intValue);
+		return intValue;
 	}
 	
 }

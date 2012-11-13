@@ -26,7 +26,10 @@ public class MyClass {
 		Kernel.logInfo("MyClass.testObjectObject:" + paramValue.toString());
 		return paramValue;
 	}
-	
+	public int testInt(int intValue) {
+		Kernel.logInfo("MyClass.testInt:" + intValue);
+		return intValue;
+	}	
 	
 	
 	public static void testVoidStatic() {
@@ -45,5 +48,8 @@ public class MyClass {
 		Kernel.logInfo("MyClass.testObjectObjectStatic:" + paramValue.toString());
 		return paramValue;
 	}
-
+	public static int testIntStatic(int intValue) {
+		Kernel.logInfo("MyClass.testIntStatic:" + intValue);
+		return intValue;
+	}	
 }

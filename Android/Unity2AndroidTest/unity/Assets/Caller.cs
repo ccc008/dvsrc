@@ -6,12 +6,14 @@ namespace a2uTest {
 	/// It tries to call Android plugin functions.
 	/// The instance of Caller can be created in two ways:
 	/// 1) create Caller as static class in MonoBehaviour.Start
-	/// 2_ create Caller as non-static class in MonoBehaviour.OnGUI
+	/// 2) create Caller as non-static class in MonoBehaviour.OnGUI
 	/// There are several variants of calls:
 	/// 1. call non-static functions of MyMainActivity
 	/// 2. call static functions of MyMainActivity
 	/// 3. call non-static function of MyClass
 	/// 4. call static function of MyClass
+	/// Additional variations:
+	/// 5. make call from thread
 	/// </summary>
 	public class Caller {
 		/// <summary>
@@ -76,6 +78,10 @@ namespace a2uTest {
 			make_non_static_calls_myclass();
 			to_log("makeTests.30");
 			make_static_calls_myclass();
+			to_log("makeTests.40");
+			make_non_static_calls_activity_int_params();
+			to_log("makeTests.50");
+			make_calls_from_thread();
 			to_log("makeTests.End");
 		}
 		private void to_log(String message) {
@@ -92,7 +98,7 @@ namespace a2uTest {
 			try { //works
 				_ActivityObject.Call("testVoid"); 
 				_ActivityObject.Call("testString", "s1"); 
-				String sresult = _ActivityObject.Call<String>("testStringString", "s2"); 
+				String sresult = _ActivityObject.Call<String>("testStringString", "s2"); 				 
 				to_log ("SUCCESS:  make_non_static_calls_activity10:" + sresult);
 			} catch (Exception ex) {
 				to_log("make_non_static_calls_activity10:" + ex.Message);
@@ -169,6 +175,69 @@ namespace a2uTest {
 			}		
 		}		
 		
+		
+		private void make_non_static_calls_activity_int_params() {
+			to_log("make_non_static_calls_activity_int_params.10");
+			try { 
+				long iresult = _ActivityObject.Call<long>("testLong", 999L); 
+				to_log ("SUCCESS:  make_non_static_calls_activity10:" + iresult);
+			} catch (Exception ex) {
+				to_log("make_non_static_calls_activity_int_paramsy10:" + ex.Message);
+			}
+			to_log("make_non_static_calls_activity_int_params.20");
+			try { 
+				int iresult = _ActivityObject.Call<int>("testInt", 999); 
+				to_log ("SUCCESS:  make_non_static_calls_activity_int_params20:" + iresult);
+			} catch (Exception ex) {
+				to_log("make_non_static_calls_activity_int_params20:" + ex.Message);
+			}
+
+			to_log("make_non_static_calls_activity_int_params.30");
+			try { 
+				int iresult = _ActivityObject.Call<int>("testInteger", 999); 
+				to_log ("SUCCESS:  make_non_static_calls_activity_int_params30:" + iresult);
+			} catch (Exception ex) {
+				to_log("make_non_static_calls_activity_int_params30:" + ex.Message);
+			}
+			to_log("make_non_static_calls_activity_int_params.40");
+		}		
+		
+		
+		private void make_calls_from_thread() {
+			System.Threading.Thread t = new System.Threading.Thread(this.thread_proc);
+			t.Start();
+			t.Join();
+		}
+		
+        private void thread_proc() {
+			to_log("Thread:  static calls");
+			try {
+				make_static_calls_activity();
+			} catch (Exception ex) {
+				to_log("Thread: static calls failed: " + ex.Message);
+			}				
+			
+			to_log("Thread: non static calls myclass ");
+			try {
+				make_non_static_calls_myclass();
+			} catch (Exception ex) {
+				to_log("Thread: non static calls myclass failed: " + ex.Message);
+			}				
+			
+			to_log("Thread:  static calls myclass");
+			try {
+				make_static_calls_myclass();
+			} catch (Exception ex) {
+				to_log("Thread: static calls failed: " + ex.Message);
+			}				
+			
+			to_log("Thread: non static calls");
+			try {
+				make_non_static_calls_activity();
+			} catch (Exception ex) {
+				to_log("Thread: non static calls failed: " + ex.Message);
+			}				
+        }		
 	}
 }
 
