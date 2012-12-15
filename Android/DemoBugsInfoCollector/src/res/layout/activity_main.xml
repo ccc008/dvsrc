@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" 
+    android:id="@+id/activity_main" 
+	android:orientation="vertical"
+	android:layout_width="fill_parent" 
+	android:layout_height="fill_parent">	
+    <Button android:id="@+id/message1" 
+		android:text="Message 1 to log (TEST only)" 
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+	/>
+    <Button android:id="@+id/message2" 
+		android:text="Message 2 to log (always)" 
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+	/>
+	<Button android:id="@+id/error1"
+		android:text="Error 1 (not interesting)"
+		android:layout_gravity="center_horizontal" 
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+	/>
+	<Button android:id="@+id/error2"
+		android:text="Error 2 (interesting)"
+		android:layout_gravity="center_horizontal" 
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+	/>
+	<Button android:id="@+id/crash"
+		android:text="Crash"
+		android:layout_gravity="center_horizontal" 
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+	/>
+	<Button android:id="@+id/send_log"
+		android:text="Send log"
+		android:layout_gravity="center_horizontal" 
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+	/>
+ </LinearLayout> 

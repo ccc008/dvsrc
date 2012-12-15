@@ -1,0 +1,23 @@
+<resources>
+
+    <string name="app_name">DemoBugsInfoCollector</string>
+    
+<!-- ACRA --> 	
+<string name="crash_notif_ticker_text">Unexpected error, please send a report&#8230;</string>
+<string name="crash_notif_title">DBIC has crashed&#8230;</string>
+<string name="crash_notif_text">Please click here to help fix the issue.</string>
+    
+<string name="crash_dialog_text">An unexpected error occurred forcing the
+    application to stop. Please help us fix this by sending us error data,
+    all you have to do is click \'OK\'.</string>
+<string name="crash_dialog_comment_prompt">You might add your comments about the problem below:</string>
+<string name="crash_dialog_ok_toast">Thank you !</string>
+    
+<string name="apsalar_statistics_suggestion">Help us to improve the application, allow us to receive anonymous statistics of the application usage.</string>
+
+<!-- Log collector -->
+	<string name="log_collector_suggestion_to_install">Install the free and open source Log Collector application to collect the device log and send it to the developer.</string>
+	<string name="log_collector_instruction">Run Log Collector application. It will collect the device log and send it to \'%1$s\'. You will have an opportunity to review and modify the data being sent.</string>
+
+
+</resources>
