@@ -2,12 +2,21 @@ package com.kbitubit.tests.dbic;
 
 /** list of error codes for apsalar */
 public final class ErrorCodes {
+	private static final int ALL_EXCEPTIONS_ARE_INTERESTED = -1;
+	private static final int NO_EXCEPTIONS_ARE_INTERESTED = -2;
 	/** List of "interesting" errors.
-	 * If such error happens we should silently send report about it to google doc (TEST version only) */
+	 * If such error happens we should silently send report about it to google doc (TEST version only) 
+	 * -1 means ALL exceptions are interested
+	 * -2 means NO exceptions are interested 
+	 * */
 	private final static int INTERESTING_ERRORS[] = {
-		2, 3, 4
+		1, 2, 4 
 	};
 	public static boolean isErrorInteresting(int errorCode) {
+		if (INTERESTING_ERRORS.length == 1) {
+			if (INTERESTING_ERRORS[0] == ALL_EXCEPTIONS_ARE_INTERESTED) return true;
+			if (INTERESTING_ERRORS[0] == NO_EXCEPTIONS_ARE_INTERESTED) return false;
+		}
 		for (int i = 0; i < INTERESTING_ERRORS.length; ++i) {
 			if (INTERESTING_ERRORS[i] == errorCode) return true;
 		}
@@ -15,11 +24,13 @@ public final class ErrorCodes {
 	}
 	
 	public final static int E1 = 1; //apsalar initalization
-	public final static int E2 = 2;
+	public final static int E2 = 2; //log collector
 	
-//these codes are not used yet
+//demo activity
 	public final static int E3 = 3; 
 	public final static int E4 = 4;
+	
+//these codes are not used yet
 	public final static int E5 = 5;
 	public final static int E6 = 6;
 	public final static int E7 = 7;

@@ -19,15 +19,15 @@ public class ApsalarStat {
 	/** check if apsalar using was allowed by the user */
 	public static Boolean isApsalarEnabled(Context context) {
 		final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-		return prefs.contains(Kernel.SP_KEY_APSALAR_ENABLED) 
-			? prefs.getBoolean(Kernel.SP_KEY_APSALAR_ENABLED, false)
+		return prefs.contains(GlobalConstants.SP_KEY_APSALAR_ENABLED) 
+			? prefs.getBoolean(GlobalConstants.SP_KEY_APSALAR_ENABLED, false)
 			: null;
 	}
 	/** save desicion of user - allow/disallow using of apsalar */
 	public static void setApsalarEnabled(Context context, boolean enabled) {
 		final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		final SharedPreferences.Editor editor = prefs.edit();
-		editor.putBoolean(Kernel.SP_KEY_APSALAR_ENABLED, enabled);
+		editor.putBoolean(GlobalConstants.SP_KEY_APSALAR_ENABLED, enabled);
 		editor.commit();
 	}
 	public static Boolean isApsalarInitialized() {

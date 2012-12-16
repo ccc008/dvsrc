@@ -46,22 +46,22 @@ public final class LogCollectorUtils {
             new AlertDialog.Builder(context)
             .setTitle(context.getString(R.string.app_name))
             .setIcon(android.R.drawable.ic_dialog_info)
-            .setMessage(context.getString(R.string.log_collector_instruction, Kernel.EMAIL_CONTACT_US))
+            .setMessage(context.getString(R.string.log_collector_instruction, GlobalConstants.EMAIL_CONTACT_US))
             .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener(){
                 public void onClick(DialogInterface dialog, int whichButton){
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     intent.putExtra(EXTRA_SEND_INTENT_ACTION, Intent.ACTION_SENDTO);
-                    intent.putExtra(EXTRA_DATA, Uri.parse("mailto:" + Kernel.EMAIL_CONTACT_US));
+                    intent.putExtra(EXTRA_DATA, Uri.parse("mailto:" + GlobalConstants.EMAIL_CONTACT_US));
                     intent.putExtra(EXTRA_ADDITIONAL_INFO, "HW: " + get_hardware_info(context));
                     intent.putExtra(Intent.EXTRA_SUBJECT
-                    		, Kernel.LOG_COLLECTOR_EMAIL_SUBJECT + ' ' + Utils.getAppBuild(context));                    
+                    		, GlobalConstants.APP_UID + " failed report " + Utils.getAppBuild(context));                    
                     intent.putExtra(EXTRA_FORMAT, "time");
                     
                     //The log can be filtered to contain data relevant only to your app
-                    if (! Version.IS_BETA) {
+                    if (! Version.IS_TEST) {
 	                    String[] filterSpecs = new String[3];
 	                    filterSpecs[0] = "AndroidRuntime:E";
-	                    filterSpecs[1] = Kernel.TAG_LOG + ":V";
+	                    filterSpecs[1] = GlobalConstants.TAG_LOG + ":V";
 	                    filterSpecs[2] = "*:S";
 	                    intent.putExtra(EXTRA_FILTER_SPECS, filterSpecs);
                     }
@@ -92,11 +92,11 @@ public final class LogCollectorUtils {
 			sb.append("ver.codename: " + get_str(android.os.Build.VERSION.CODENAME));
 			sb.append("ver.incremental: " + get_str(android.os.Build.VERSION.INCREMENTAL));
 			sb.append("ver.release: " + get_str(android.os.Build.VERSION.RELEASE));
-			sb.append("ver.sdk: " + get_str(android.os.Build.VERSION.SDK));
+			sb.append("ver.sdk: " + android.os.Build.VERSION.SDK_INT);
 
 			return sb.toString();
 		} catch (Exception ex) {
-			Kernel.logError(ex, ErrorCodes.E82);
+			Kernel.logError(ex, ErrorCodes.E2);
 			return "get_hardware_info error";
 		}
 	}

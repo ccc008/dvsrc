@@ -3,7 +3,7 @@ package com.kbitubit.tests.dbic;
 public class Version {
 	public static final boolean IS_PRO = false;
 	public static final boolean IS_DEBUG = true;
-	public static final boolean IS_BETA = false;
+	public static final boolean IS_TEST = false;
 	/** В отладочной версии FREE версия ведет себя как FREE, даже если установлена PRO */
 	public static final boolean IS_FREE_IS_FREE_IN_DEBUG = false;
 	
@@ -19,10 +19,10 @@ public class Version {
 	public static String getPackageName() {
 		if (IS_PRO) {
 			return "com.kbitubit.tests" + ".pro.dbic";
-		} else if (IS_BETA) {
+		} else if (IS_TEST) {
 			return "com.kbitubit.tests" + ".test.dbic";
 		} else {
-			return "com.kbitubit.tests" + ".free.dbic";
+			return "com.kbitubit.tests" + ".dbic";
 		}
 	}
 }

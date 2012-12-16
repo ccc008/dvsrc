@@ -5,7 +5,6 @@ import com.kbitubit.tests.dbic.ErrorCodes;
 import com.kbitubit.tests.dbic.Kernel;
 import com.kbitubit.tests.dbic.LogCollectorUtils;
 import com.kbitubit.tests.dbic.R;
-
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
@@ -30,12 +29,12 @@ public class DemoActivity extends Activity {
 		});
 		((Button)findViewById(R.id.error1)).setOnClickListener(new View.OnClickListener() {			
 			public void onClick(View v) {
-				Kernel.logError(ErrorCodes.E1);
+				Kernel.logError(ErrorCodes.E3);
 			}
 		});
 		((Button)findViewById(R.id.error2)).setOnClickListener(new View.OnClickListener() {			
 			public void onClick(View v) {
-				Kernel.logError(ErrorCodes.E2);
+				Kernel.logError(ErrorCodes.E4);
 			}
 		});
 		((Button)findViewById(R.id.crash)).setOnClickListener(new View.OnClickListener() {			
