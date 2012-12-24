@@ -8,7 +8,7 @@ namespace FlexBuildIncrementer {
     class Program {
 
         static void help() {
-            System.Console.WriteLine("FlexBuildIncrementer, see http://code.google.com/p/dvsrc/");
+            System.Console.WriteLine("FlexBuildIncrementer 1.1, see http://code.google.com/p/dvsrc/");
             System.Console.WriteLine("Generates version for C++ application according specified rules");
             System.Console.WriteLine("FlexBuildIncrementer <path> [mode]");
             System.Console.WriteLine("Source file should contain single line: ");
@@ -21,6 +21,12 @@ namespace FlexBuildIncrementer {
             System.Console.WriteLine("Command line parameter \"mode\" is optional. If it isn't specified");
             System.Console.WriteLine("then DEFAULT_MODE from comment is used as mode. If [DEFAULT_MODE] is unspecified");
             System.Console.WriteLine("then inc mode is used.");
+            System.Console.WriteLine("");
+            System.Console.WriteLine("FlexBuildIncrementer --patch <path of version file> <path of patched file> <regexp>");
+            System.Console.WriteLine(" Copy versoin from version file to another file according regexp ");
+            System.Console.WriteLine(" Example for innosetup script: ");
+            System.Console.WriteLine("      Innosetup script contains line: #define APP_VER \"2012.12.20.2\"");
+            System.Console.WriteLine(" FlexBuildIncrementer --patch version.h setup.iss \"#define\\s+APP_VER\\s+\\\"(\\d+\\.\\d+\\.\\d+\\.\\d+)\\\"");
         }
 
         static void Main(string[] args) {
@@ -28,21 +34,17 @@ namespace FlexBuildIncrementer {
                 help();
                 return;
             }
+            if (args[0] == "--patch") {
+                patch_file(args);
+                return;
+            }
 
             String path = args[0];
             String mode = args.Length > 1 ? args[1] : null;
 
-        //load file content
-            String file_content = System.IO.File.Exists(path)
-                ? GetFileBody(path, "utf-8")
-                : "#define APPLICATION_VERSION \"1.0.0.0\" //[inc] inc, sec70, date, date_sec70";
-
-        //parse file content
-            Regex r = new Regex(".*\\\"(\\d+\\.\\d+\\.\\d+\\.\\d+)\\\"\\s*//(\\[([\\w_]+)\\])");
-            Match m = r.Match(file_content);
-            if (!m.Success) {
-                throw new Exception("File content doesn't match to pattern: \"#define APPLICATION_VERSION \"1.0.0.0\" //[DEFAULT_MODE]\", " + file_content);
-            }
+            Match m;
+            String file_content;
+            parse_version_file_content(path, out file_content, out m);
 
        //set mode to DEFAULT MODE if mode is not specified as command line param
             if (mode == null) {
@@ -61,6 +63,7 @@ namespace FlexBuildIncrementer {
             SaveStringToFile(file_content, path);
 
         }
+
         private class Replacer {
             private readonly String _Mode;
             private readonly Regex _R = new Regex("(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)");
@@ -117,6 +120,49 @@ namespace FlexBuildIncrementer {
             using (System.IO.StreamWriter sw = System.IO.File.CreateText(fileName)) {
                 sw.Write(srcStr);
             }
+        }
+
+        private static void parse_version_file_content(string path, out string file_content, out Match m) {
+            //load file content
+            file_content = System.IO.File.Exists(path)
+                ? GetFileBody(path, "utf-8")
+                : "#define APPLICATION_VERSION \"1.0.0.0\" //[inc] inc, sec70, date, date_sec70";
+
+            //parse file content
+            Regex r = new Regex(".*\\\"(\\d+\\.\\d+\\.\\d+\\.\\d+)\\\"\\s*//(\\[([\\w_]+)\\])");
+            m = r.Match(file_content);
+            if (!m.Success) {
+                throw new Exception("File content doesn't match to pattern: \"#define APPLICATION_VERSION \"1.0.0.0\" //[DEFAULT_MODE]\", " + file_content);
+            }
+        }
+
+        private static void patch_file(string[] args) {
+            if (args.Length < 4) {
+                help();
+                return;
+            }
+            String path = args[1];
+            String path_dest = args[2];
+            String sregexp = args[3];
+
+        //load version from version.h file
+            Match m;
+            String file_content;
+            parse_version_file_content(path, out file_content, out m);
+            String sversion = m.Groups[1].Captures[0].ToString();
+        //parse dest file 
+            if (! System.IO.File.Exists(path_dest)) {
+                throw new Exception("File doesn't exist: " + path_dest);
+            }
+            String dest_file_content = GetFileBody(path_dest, "utf-8");
+            Regex r_replace = new Regex(sregexp);
+            MatchCollection mc = r_replace.Matches(dest_file_content);
+            for (int i = mc.Count - 1; i >= 0; --i) {
+                int index = mc[i].Groups[1].Captures[0].Index;
+                dest_file_content = dest_file_content.Remove(index, mc[i].Groups[1].Captures[0].Length);
+                dest_file_content = dest_file_content.Insert(index, sversion);
+            }
+            SaveStringToFile(dest_file_content, path_dest);
         }
 
     }
