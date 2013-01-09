@@ -26,12 +26,14 @@ namespace apfsplitter {
                 }
             }
 
+            String new_packagename = m_Vm.getNewPackageName().Replace(".", "\\");
+
             foreach(String src_dir in Directory.GetDirectories(srcDir, "*.*")) {
                 if (m_Vm.SkipCopyDirectory(srcDir, Path.GetFileName(src_dir))) continue;
 
                 String dest_dir = destDir + "\\" + Path.GetFileName(src_dir);
                 if (dest_dir.ToLower().EndsWith(m_PackageDirectory)) {
-                    dest_dir = dest_dir + "\\" + m_Vm.AdditionalPrefixForPackageName.Replace(".", "\\");
+                    dest_dir = dest_dir.Substring(0, dest_dir.Length - m_PackageDirectory.Length) + new_packagename;
                 }
 
                 Directory.CreateDirectory(dest_dir);

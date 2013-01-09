@@ -11,6 +11,7 @@ namespace apfsplitter {
         readonly String m_TagVersion;
         public readonly String OriginalPackageName;
         public readonly String AdditionalPrefixForPackageName;
+        public readonly String NewPackageName;
         private readonly String m_OppositeMacrosValue;
         private readonly XmlNode m_VersionNode;
         private readonly bool m_bReverse;
@@ -66,7 +67,12 @@ namespace apfsplitter {
                 m_Regex[i] = new Regex(Utils.FileMask2Regexp(expand_macros(sfile_mask)));
             }
 
-            this.AdditionalPrefixForPackageName = expand_macros(m_VersionNode.SelectSingleNode("package/postfix").InnerText);
+            this.AdditionalPrefixForPackageName = m_VersionNode.SelectSingleNode("package/postfix") == null 
+                ? null
+                : expand_macros(m_VersionNode.SelectSingleNode("package/postfix").InnerText);
+            this.NewPackageName = m_VersionNode.SelectSingleNode("package/new_package_name") == null
+                ? null
+                : m_VersionNode.SelectSingleNode("package/new_package_name").InnerText;
             this.OriginalPackageName = packageName;
 
 
@@ -128,9 +134,7 @@ namespace apfsplitter {
             m_ListReplacements.Add(new ContentReplaceInfo(
                 m_VersionNode.SelectSingleNode("package/include_files").InnerText
                 , OriginalPackageName
-                , AdditionalPrefixForPackageName.Length != 0 
-                    ? OriginalPackageName + "." + AdditionalPrefixForPackageName
-                    : OriginalPackageName
+                , getNewPackageName()
                 , treplace_kinds.DIRECT
             ));
         }
@@ -175,6 +179,14 @@ namespace apfsplitter {
             if (node == null) return true;
 
             return node.InnerText == String.Format("target:{0}", m_TagVersion);
+        }
+
+        internal String getNewPackageName() {
+            return this.AdditionalPrefixForPackageName == null
+                ? this.NewPackageName == null
+                    ? this.OriginalPackageName
+                    : this.NewPackageName
+                    : this.OriginalPackageName + "." + this.AdditionalPrefixForPackageName;
         }
     }
 }

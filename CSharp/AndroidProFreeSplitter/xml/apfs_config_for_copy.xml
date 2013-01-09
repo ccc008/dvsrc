@@ -1,0 +1,40 @@
+<data>                                                          
+
+<modify_content from="com.packagename.name1" to="com.packagename.name2">
+*.cs
+AndroidManifest.xml
+</modify_content>
+
+<copy>
+<exclude_names>
+Temp
+ScriptAssemblies
+metadata
+w3d.jar
+</exclude_names>
+<exclude_paths>
+versions/release/unity/Library/assetDatabase3
+versions/release/unity/Library/assetservercachev3
+versions/release/unity/Library/AssetVersioning.db
+versions/release/unity/Library/AudioManager.asset
+versions/release/unity/Library/BuildPlayer.prefs
+versions/release/unity/Library/BuildSettings.asset
+versions/release/unity/Library/DynamicsManager.asset
+versions/release/unity/Library/EditorSettings.asset
+versions/release/unity/Library/EditorUserBuildSettings.asset
+versions/release/unity/Library/expandedItems
+versions/release/unity/Library/FailedAssetImports.txt
+versions/release/unity/Library/InspectorExpandedItems.asset
+versions/release/unity/Library/MonoManager.asset
+versions/release/unity/Library/NetworkManager.asset
+versions/release/unity/Library/ScriptMapper
+versions/release/unity/Library/unity default resources
+versions/release/unity/Library/unity editor resources
+</exclude_paths>
+<skip_if_exists>
+versions/release/unity/Library/ProjectSettings.asset 
+versions/release/unity/ProjectSettings/ProjectSettings.asset
+</skip_if_exists>
+</copy>
+
+</data>

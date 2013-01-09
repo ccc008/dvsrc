@@ -3,18 +3,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using System.IO;
+using System.Text.RegularExpressions;
 
 namespace apfsplitter {
     class Program {
         static void help() {
             System.Console.WriteLine("Android Pro Free Splitter. Using:");
             System.Console.WriteLine("apfsplitter <src project directory> <dest project directory> <config.xml> <version tag>");
+            System.Console.WriteLine("apfsplitter --copy <src project directory> <dest project directory> <config.xml>");
         }
         static void Main(string[] args) {
             if (args.Length < 4) {
                 help();
                 return;
             }
+            if (args[0] == "--copy") {
+                copy_dirs(args[1], args[2], new FileProcessor(args[3]));
+                return;
+            }
+
             String tag_version = args[3];
             bool breverse = tag_version.StartsWith("!");
             if (breverse) tag_version = tag_version.Substring(1, tag_version.Length - 1);
@@ -45,6 +53,37 @@ namespace apfsplitter {
             foreach (String sfile in System.IO.Directory.GetFiles(destDir)) {
                 if (vm.SkipClearDestDirFile(destDir, System.IO.Path.GetFileName(sfile))) continue;
                 System.IO.File.Delete(sfile);
+            }
+        }
+       
+
+        /// <summary>
+        /// Copy all files&folders from srcDir to destDir, skip files and folders that match to exception patterns
+        /// </summary>
+        static void copy_dirs(String srcDir, String destDir, FileProcessor processor) {
+            if (!System.IO.Directory.Exists(destDir)) {
+                System.IO.Directory.CreateDirectory(destDir);
+            }
+
+            foreach (String src_file in Directory.GetFiles(srcDir, "*.*")) {
+                if (processor.SkipCopyFile(destDir, Path.GetFileName(src_file))) {
+                    continue;
+                }
+
+                String fndest = destDir + "\\" + Path.GetFileName(src_file);
+                File.Copy(src_file, fndest, true);
+                processor.Modify(fndest);
+            }
+
+            foreach (String src_dir in Directory.GetDirectories(srcDir, "*.*")) {
+                if (processor.SkipCopyDirectory(destDir, Path.GetFileName(src_dir))) {
+                    continue;
+                }
+
+                String dest_dir = destDir + "\\" + Path.GetFileName(src_dir);
+                Directory.CreateDirectory(dest_dir);
+
+                copy_dirs(src_dir, dest_dir, processor);
             }
         }
     }
