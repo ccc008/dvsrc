@@ -22,7 +22,7 @@ namespace FlexBuildIncrementer {
             System.Console.WriteLine("then DEFAULT_MODE from comment is used as mode. If [DEFAULT_MODE] is unspecified");
             System.Console.WriteLine("then inc mode is used.");
             System.Console.WriteLine("");
-            System.Console.WriteLine("FlexBuildIncrementer --patch <path of version file> <path of patched file> <regexp>");
+            System.Console.WriteLine("FlexBuildIncrementer --patch <path of version file> <path of patched file> <regexp> [encoding]");
             System.Console.WriteLine(" Copy versoin from version file to another file according regexp ");
             System.Console.WriteLine(" Example for innosetup script: ");
             System.Console.WriteLine("      Innosetup script contains line: #define APP_VER \"2012.12.20.2\"");
@@ -60,7 +60,7 @@ namespace FlexBuildIncrementer {
 
             file_content = r_replace.Replace(file_content, new MatchEvaluator(replacer.Replace));
         //save results
-            SaveStringToFile(file_content, path);
+            SaveStringToFile(file_content, path, "utf-8");
 
         }
 
@@ -104,7 +104,10 @@ namespace FlexBuildIncrementer {
         }
 
         public static String GetFileBody(String FileName, String SrcEncoding) {
-            Encoding encode = System.Text.Encoding.GetEncoding(SrcEncoding);
+            Int32 code_page;
+            Encoding encode = Int32.TryParse(SrcEncoding, out code_page)
+                ? System.Text.Encoding.GetEncoding(code_page)
+                : System.Text.Encoding.GetEncoding(SrcEncoding);
             return encode.GetString(GetFileBody(FileName));
         }
         public static byte[] GetFileBody(String FileName) {
@@ -116,10 +119,18 @@ namespace FlexBuildIncrementer {
             }
         }
 
-        public static void SaveStringToFile(String srcStr, String fileName) {
-            using (System.IO.StreamWriter sw = System.IO.File.CreateText(fileName)) {
-                sw.Write(srcStr);
+        public static void SetFileBody(String FileName, byte[] bytes) {
+            using (System.IO.FileStream f = new System.IO.FileStream(FileName, System.IO.FileMode.Create)) {
+                f.Write(bytes, 0, bytes.Length);
             }
+        }
+
+        public static void SaveStringToFile(String srcStr, String fileName, String srcEncoding) {
+            Int32 code_page;
+            Encoding encode = Int32.TryParse(srcEncoding, out code_page)
+                ? System.Text.Encoding.GetEncoding(code_page)
+                : System.Text.Encoding.GetEncoding(srcEncoding);
+            SetFileBody(fileName, encode.GetBytes(srcStr));
         }
 
         private static void parse_version_file_content(string path, out string file_content, out Match m) {
@@ -144,6 +155,9 @@ namespace FlexBuildIncrementer {
             String path = args[1];
             String path_dest = args[2];
             String sregexp = args[3];
+            String encoding = args.Length >= 4
+                ? args[4]
+                : "utf-8";
 
         //load version from version.h file
             Match m;
@@ -154,7 +168,7 @@ namespace FlexBuildIncrementer {
             if (! System.IO.File.Exists(path_dest)) {
                 throw new Exception("File doesn't exist: " + path_dest);
             }
-            String dest_file_content = GetFileBody(path_dest, "utf-8");
+            String dest_file_content = GetFileBody(path_dest, encoding);
             Regex r_replace = new Regex(sregexp);
             MatchCollection mc = r_replace.Matches(dest_file_content);
             for (int i = mc.Count - 1; i >= 0; --i) {
@@ -162,7 +176,7 @@ namespace FlexBuildIncrementer {
                 dest_file_content = dest_file_content.Remove(index, mc[i].Groups[1].Captures[0].Length);
                 dest_file_content = dest_file_content.Insert(index, sversion);
             }
-            SaveStringToFile(dest_file_content, path_dest);
+            SaveStringToFile(dest_file_content, path_dest, encoding);
         }
 
     }

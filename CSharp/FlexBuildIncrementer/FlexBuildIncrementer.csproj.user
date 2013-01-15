@@ -3,4 +3,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <StartArguments>--patch Z:\projects\LedPlayer\LedPlayer\src\LedPlayerT\ledplayer_version.h Z:\projects\LedPlayer\LedPlayer\setup\LedPlayerT.iss "#define\s+APP_VER\s+\"(\d+\.\d+\.\d+\.\d+)\"</StartArguments>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <StartArguments>--patch C:\projects\LedPlayer\src\LedPlayerT\ledplayer_version.h C:\projects\LedPlayer\setup\LedPlayerT.iss "#define\s+APP_VER\s+\"(\d+\.\d+\.\d+\.\d+)\"" 1251</StartArguments>
+  </PropertyGroup>
 </Project>
