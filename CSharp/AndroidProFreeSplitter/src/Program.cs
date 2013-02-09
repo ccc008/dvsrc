@@ -5,6 +5,7 @@ using System.Text;
 using System.Xml;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
 
 namespace apfsplitter {
     class Program {
@@ -71,8 +72,10 @@ namespace apfsplitter {
                 }
 
                 String fndest = destDir + "\\" + Path.GetFileName(src_file);
-                File.Copy(src_file, fndest, true);
-                processor.Modify(fndest);
+                if (GetChecksum(src_file) != GetChecksum(fndest)) {
+                    File.Copy(src_file, fndest, true);
+                    processor.Modify(fndest);
+                }
             }
 
             foreach (String src_dir in Directory.GetDirectories(srcDir, "*.*")) {
@@ -84,6 +87,22 @@ namespace apfsplitter {
                 Directory.CreateDirectory(dest_dir);
 
                 copy_dirs(src_dir, dest_dir, processor);
+            }
+        }
+
+        private static bool is_file_modified(string src_file, string fndest) {
+            throw new NotImplementedException();
+        }
+
+        private static string GetChecksum(string file) {
+            try {
+                using (var stream = new BufferedStream(File.OpenRead(file), 1200000)) {
+                    SHA256Managed sha = new SHA256Managed();
+                    byte[] checksum = sha.ComputeHash(stream);
+                    return BitConverter.ToString(checksum).Replace("-", String.Empty);
+                }
+            } catch (Exception ex) {
+                return null;
             }
         }
     }

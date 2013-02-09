@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <StartArguments>--copy C:\projects\W3D\sources\unity\ C:\projects\W3D\versions\release\unity C:\projects\W3D\versions\apfs_copy_config.xml</StartArguments>
+    <StartArguments>"Z:\projects\StoryBoard\sources" "Z:\projects\StoryBoard\versions\pro" "Z:\projects\StoryBoard\versions\apfs_config.xml " !pro</StartArguments>
   </PropertyGroup>
 </Project>

@@ -182,7 +182,7 @@ namespace apfsplitter {
         }
 
         internal String getNewPackageName() {
-            return this.AdditionalPrefixForPackageName == null
+            return this.AdditionalPrefixForPackageName == null || this.AdditionalPrefixForPackageName == ""
                 ? this.NewPackageName == null
                     ? this.OriginalPackageName
                     : this.NewPackageName
