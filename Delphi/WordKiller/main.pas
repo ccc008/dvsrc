@@ -89,9 +89,9 @@ begin
   m_Thread := TWordThread.Create(m_Config.SrcFileNameForKillProcessByWindow);
   m_Thread.Start;
 
-  Sleep(3000);
+//  Sleep(3000);
   ProcessKiller.FindAndKillProcessByWindow('winword.exe', m_Config.SrcFileNameForKillProcessByWindow);
-  Sleep(3000);
+//  Sleep(3000);
 end;
 
 procedure TWordKillerService.load_config;
