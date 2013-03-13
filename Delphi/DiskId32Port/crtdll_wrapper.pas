@@ -22,6 +22,8 @@ function isalnum(ch: AnsiChar): Boolean;
 
 implementation
 
+//Use crtdll.dll for compartibility with Win95
+//Use msvcrt.dll if you need compilation for x64 or compartibility with Win95 is not required.
 function crt_isspace(ch: Integer): Integer; cdecl; external 'msvcrt.dll' name 'isspace';
 function crt_isalpha(ch: Integer): Integer; cdecl; external 'msvcrt.dll' name 'isalpha';
 function crt_tolower(ch: Integer): Integer; cdecl; external 'msvcrt.dll' name 'tolower';
