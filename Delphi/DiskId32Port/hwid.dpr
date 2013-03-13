@@ -20,12 +20,12 @@ uses
 
 var id: Integer;
     r: tresults_array_dv;
+    //os: THandleStream;
 begin
   { TODO -oUser -cConsole Main : Insert code here }
   test;
   StrToDate('1.08.2010'); 
 //get hardware id for this computer
-
 //Execude hwid.exe debug for displaying extended debug information
   SetPrintDebugInfo(ParamCount <> 0);
   id := getHardDriveComputerID(r);

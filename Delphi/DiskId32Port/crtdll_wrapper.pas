@@ -22,11 +22,11 @@ function isalnum(ch: AnsiChar): Boolean;
 
 implementation
 
-function crt_isspace(ch: Integer): Integer; cdecl; external 'crtdll.dll' name 'isspace';
-function crt_isalpha(ch: Integer): Integer; cdecl; external 'crtdll.dll' name 'isalpha';
-function crt_tolower(ch: Integer): Integer; cdecl; external 'crtdll.dll' name 'tolower';
-function crt_isprint(ch: Integer): Integer; cdecl; external 'crtdll.dll' name 'isprint';
-function crt_isalnum(ch: Integer): Integer; cdecl; external 'crtdll.dll' name 'isalnum';
+function crt_isspace(ch: Integer): Integer; cdecl; external 'msvcrt.dll' name 'isspace';
+function crt_isalpha(ch: Integer): Integer; cdecl; external 'msvcrt.dll' name 'isalpha';
+function crt_tolower(ch: Integer): Integer; cdecl; external 'msvcrt.dll' name 'tolower';
+function crt_isprint(ch: Integer): Integer; cdecl; external 'msvcrt.dll' name 'isprint';
+function crt_isalnum(ch: Integer): Integer; cdecl; external 'msvcrt.dll' name 'isalnum';
 
 function isspace(ch: AnsiChar): Boolean;
 begin
