@@ -25,6 +25,10 @@ unit hwid_impl;
 //  05/02/09  Ported from C++ to Delphi by Victor Derevyanko, dvpublic0@gmail.com
 //            The translation was donated by efaktum (http://www.efaktum.dk).
 //            If you find any error please send me bugreport by email. Thanks in advance.
+//  08/29/13  Fixed ansichar/char error in ReadIdeDriveAsScsiDriveInNT
+//            crtdll_wrapper is replaced by isctype.pas (dependency from msvcrt.dll is removed)
+//            minor optimisation                    
+//            by spanther@mail.ru
 
 // Original code can be taken here:
 // http://www.winsim.com/diskid32/diskid32.html
@@ -70,7 +74,7 @@ procedure test;
 {$ENDIF}
 
 implementation
-uses winioctl, crtdll_wrapper;
+uses winioctl, isctype;
 var
   HardDriveSerialNumber: array [0..1023] of AnsiChar;
   HardDriveModelNumber: array [0..1023] of AnsiChar;
@@ -318,7 +322,7 @@ begin
          cbBytesReturned := 0;
 
             // Get the version, etc of PhysicalDrive IOCTL
-         FillMemory(@VersionParams, sizeof(VersionParams), 0);      //=memset ((void*) &VersionParams, 0, sizeof(VersionParams));
+         FillChar(VersionParams, sizeof(VersionParams), 0);      //=memset ((void*) &VersionParams, 0, sizeof(VersionParams));
 
          if ( not DeviceIoControl(hPhysicalDriveIOCTL, DFP_GET_VERSION,
                    nil,
@@ -362,8 +366,8 @@ begin
               then bIDCmd := IDE_ATAPI_IDENTIFY
               else bIDCmd := IDE_ATA_IDENTIFY;
 
-            FillMemory(@scip, sizeof(scip), 0);
-            FillMemory(@IdOutCmd[0], sizeof(IdOutCmd), 0);
+            FillChar(scip, sizeof(scip), 0);
+            FillChar(IdOutCmd[0], sizeof(IdOutCmd), 0);
 
             if ( 0 <> DoIDENTIFY (hPhysicalDriveIOCTL, @scip, PSENDCMDOUTPARAMS(@IdOutCmd[0])
               , BYTE(bIDCmd), BYTE(drive), @cbBytesReturned))
@@ -519,7 +523,7 @@ begin
            cbBytesReturned := 0;
 
               // Get the version, etc of PhysicalDrive IOCTL
-           FillMemory (@GetVersionParams, sizeof(GetVersionParams), 0);
+           FillChar(GetVersionParams, sizeof(GetVersionParams), 0);
 
            if (not DeviceIoControl (hPhysicalDriveIOCTL, SMART_GET_VERSION, nil, 0,
                @GetVersionParams, sizeof (GETVERSIONINPARAMS), cbBytesReturned, nil) )
@@ -715,7 +719,7 @@ begin
    j := 0;
    k := 0;
 
-   buf [0] := Chr(0);
+   buf [0] := #$00;
    if (pos <= 0) then begin
       Result := buf;
       exit;
@@ -727,12 +731,12 @@ begin
       // First try to gather all characters representing hex digits only.
       j := 1;
       k := 0;
-      buf[k] := Chr(0);
+      buf[k] := #$00;
       i := pos;
-      while (j <> 0) and (str[i] <> Chr(0)) do begin
-        c := tolower(str[i]);
+      while (j <> 0) and (str[i] <> #$00) do begin
+        c := ansichar(tolower(ord(str[i])));
 
-    	  if (isspace(c)) then c := Chr(0);
+    	  if (isspaceB(ord(c))) then c := #$00;
 
     	  inc(p);
     	  buf[k] :=  AnsiChar(Chr(Ord(buf[k]) shl 4));
@@ -747,13 +751,13 @@ begin
       	    end;
 
 	      if (p = 2) then begin
-    	    if ((buf[k] <> Chr(0)) and (not isprint(buf[k]))) then begin
+    	    if ((buf[k] <> #$00) and (not isprintB(ord(buf[k])))) then begin
     	       j := 0;
 	           break;
     	    end;
 	        inc(k);
   	      p := 0;
-	        buf[k] := Chr(0);
+	        buf[k] := #$00;
   	    end;
         inc(i);
       end;
@@ -764,10 +768,10 @@ begin
       j := 1;
       k := 0;
       i := pos;
-      while ( (j <> 0) and (str[i] <> Chr(0)) ) do begin
+      while ( (j <> 0) and (str[i] <> #$00) ) do begin
         c := str[i];
 
-	      if ( not isprint(c)) then begin
+	      if ( not isprintB(ord(c))) then begin
 	        j := 0;
 	        break;
 	      end;
@@ -783,7 +787,7 @@ begin
       k := 0;
    end;
 
-   buf[k] := Chr(0);
+   buf[k] := #$00;
 
    if (flip <> 0) then begin
       // Flip adjacent characters
@@ -800,8 +804,8 @@ begin
    i := -1;
    j := -1;
    k := 0;
-   while (buf[k] <> Chr(0)) do begin
-      if (not isspace(buf[k])) then begin
+   while (buf[k] <> #$00) do begin
+      if (not isspaceB(ord(buf[k]))) then begin
         if (i < 0) then i := k;
 	      j := k;
       end;
@@ -810,11 +814,11 @@ begin
 
    if ((i >= 0) and (j >= 0)) then begin
       k := i;
-      while ( ( k <= j) and (buf[k] <> Chr(0)) ) do begin
+      while ( ( k <= j) and (buf[k] <> #$00) ) do begin
          buf[k - i] := buf[k];
          inc(k);
       end;
-      buf[k - i] := Chr(0);
+      buf[k - i] := #$00;
    end;
 
    Result := buf;
@@ -884,11 +888,11 @@ begin
       cbBytesReturned := 0;
 		  //-char buffer [10000];
 
-      FillMemory(@query, sizeof (query), 0);
+      FillChar(query, sizeof (query), 0);
       query.PropertyId := StorageDeviceProperty;
 		  query.QueryType := PropertyStandardQuery;
 
-      FillMemory(@buffer, sizeof (buffer), 0);
+      FillChar(buffer, sizeof (buffer), 0);
 
       if ( DeviceIoControl (hPhysicalDriveIOCTL, IOCTL_STORAGE_QUERY_PROPERTY, @query, sizeof (query),
 				   @buffer, sizeof (buffer), cbBytesReturned, nil) )
@@ -942,10 +946,10 @@ begin
 	      flipAndCodeBytes (buffer, descrip^.ProductRevisionOffset, 0, productRevision );
         flipAndCodeBytes (buffer, descrip^.SerialNumberOffset, 1, serialNumber);
 
-			  if ( (Chr(0) = HardDriveSerialNumber [0]) and
+			  if ( (#$00 = HardDriveSerialNumber [0]) and
 						//  serial number must be alphanumeric
 			            //  (but there can be leading spaces on IBM drives)
-				   (isalnum (serialNumber [0]) or isalnum (serialNumber [19])))
+				   (isalnumB(ord(serialNumber[0])) or isalnumB(ord(serialNumber[19]))))
         then begin
 				  StrCopy(HardDriveSerialNumber, serialNumber);
 				  StrCopy(HardDriveModelNumber, modelNumber);
@@ -973,7 +977,7 @@ begin
                serialNumber]));
 {$ENDIF}
            // Get the disk drive geometry.
-        FillMemory(@buffer, sizeof(buffer), 0);
+        FillChar(buffer, sizeof(buffer), 0);
         if (not DeviceIoControl (hPhysicalDriveIOCTL,
                 IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
                 nil,
@@ -1241,17 +1245,17 @@ begin
             pin := PSENDCMDINPARAMS(buffer + sizeof (SRB_IO_CONTROL));
             //-DWORD dummy;
 
-            FillMemory(@buffer, sizeof(buffer), 0);
+            FillChar(buffer, sizeof(buffer), 0);
             p^.HeaderLength := sizeof (SRB_IO_CONTROL);
             p^.Timeout := 10000;
             p^.Length := SENDIDLENGTH;
             p^.ControlCode := IOCTL_SCSI_MINIPORT_IDENTIFY;
-            StrLCopy(PChar(@p^.Signature), 'SCSIDISK', 8);
+            StrLCopy(PAnsiChar(@p^.Signature), 'SCSIDISK', 8);
 
             pin^.irDriveRegs.bCommandReg := IDE_ATA_IDENTIFY;
             pin^.bDriveNumber := drive;
 
-            if (DeviceIoControl (hScsiDriveIOCTL, IOCTL_SCSI_MINIPORT, 
+            if (DeviceIoControl (hScsiDriveIOCTL, IOCTL_SCSI_MINIPORT,
                                  @buffer,
                                  sizeof (SRB_IO_CONTROL) + sizeof (SENDCMDINPARAMS) - 1,
                                  @buffer,
@@ -1260,7 +1264,7 @@ begin
             then begin
                pOut := PSENDCMDOUTPARAMS(buffer + sizeof (SRB_IO_CONTROL)); //!TOCHECK
                pId := PIDSECTOR(@pOut^.bBuffer[0]);
-               if (pId^.sModelNumber[0] <> Chr(0) ) then begin
+               if (pId^.sModelNumber[0] <> #$00 ) then begin
                   //-DWORD diskdata [256];
                   //-ijk := 0;
                   pIdSectorPtr := PWord(pId);
@@ -1304,10 +1308,10 @@ begin
    ConvertToString (diskdata, 23, 26, @revisionNumber);
    //-sWrite(Format (bufferSize, '%u', diskdata [21] * 512);
 
-   if ((Chr(0) = HardDriveSerialNumber[0]) and
+   if ((#$00 = HardDriveSerialNumber[0]) and
        //  serial number must be alphanumeric
        //  (but there can be leading spaces on IBM drives)
-       (isalnum (serialNumber [0]) or isalnum (serialNumber [19])))
+       (isalnumB(ord(serialNumber[0])) or isalnumB(ord(serialNumber [19]))))
    then begin
       StrCopy(PAnsiChar(@HardDriveSerialNumber), PAnsiChar(@serialNumber));
       StrCopy(PAnsiChar(@HardDriveModelNumber), PAnsiChar(@modelNumber));
@@ -1427,14 +1431,14 @@ begin
    end;
 
       //  end the string
-   buf[position] := Chr(0);
+   buf[position] := #$00;
 
       //  cut off the trailing blanks
    index := position - 1;
    while (index >0) do begin
-      if not isspace(AnsiChar(buf[index]))
+      if not isspaceB(ord(buf[index]))
         then break;
-      buf [index] := Chr(0);
+      buf [index] := #$00;
       dec(index);
    end;
 
@@ -1456,7 +1460,7 @@ begin
 
   StrCopy(HardDriveSerialNumber, '');
 
-  FillMemory(@version, sizeof (version), 0);
+  FillChar(version, sizeof (version), 0);
   version.dwOSVersionInfoSize := sizeof (OSVERSIONINFO);
   GetVersionEx(version);
   if (version.dwPlatformId = VER_PLATFORM_WIN32_NT) then begin
@@ -1498,7 +1502,7 @@ begin
 
     done := false;
          //  try this up to 10 times to get a hard drive serial number
-    while ( (attempt < 10) and (not done) and (Chr(0) = HardDriveSerialNumber[0]) ) do begin
+    while ( (attempt < 10) and (not done) and (#$00 = HardDriveSerialNumber[0]) ) do begin
       done := ReadDrivePortsInWin9X (Dest);
     end;
   end;
@@ -1513,7 +1517,7 @@ begin
     if ( 0 = StrLComp(HardDriveSerialNumber, 'WD-W', 4)) then inc(ip, 5);
 
     assert(sizeof(HardDriveSerialNumber) = 1024);
-    while ((HardDriveSerialNumber[ip] <> Chr(0)) and (ip < 1024))  do begin
+    while ((HardDriveSerialNumber[ip] <> #$00) and (ip < 1024))  do begin
       if ('-' = HardDriveSerialNumber[ip]) then begin
         Inc(ip);
         continue;
@@ -1635,7 +1639,8 @@ initialization
   SMART_GET_VERSION := CTL_CODE(IOCTL_DISK_BASE, $0020, METHOD_BUFFERED, FILE_READ_ACCESS);
   SMART_SEND_DRIVE_COMMAND := CTL_CODE(IOCTL_DISK_BASE, $0021, METHOD_BUFFERED, FILE_READ_ACCESS or FILE_WRITE_ACCESS);
   SMART_RCV_DRIVE_DATA := CTL_CODE(IOCTL_DISK_BASE, $0022, METHOD_BUFFERED, FILE_READ_ACCESS or FILE_WRITE_ACCESS);
-  IOCTL_STORAGE_QUERY_PROPERTY := CTL_CODE(IOCTL_STORAGE_BASE, $0500, METHOD_BUFFERED, FILE_ANY_ACCESS);
+
+  IOCTL_STORAGE_QUERY_PROPERTY := CTL_CODE(IOCTL_STORAGE_BASE, $0500, METHOD_BUFFERED, FILE_ANY_ACCESS);
   IOCTL_DISK_GET_DRIVE_GEOMETRY_EX := CTL_CODE(IOCTL_DISK_BASE, $0028, METHOD_BUFFERED, FILE_ANY_ACCESS);
   PRINT_DEBUG := false;
 end.
