@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.IO;
+using System.Globalization;
 
 namespace CrowdinSpreader {
     /// <summary>
@@ -31,6 +32,9 @@ namespace CrowdinSpreader {
         // <rules>
         // 	<rule origin="en\strings.xml"
         // 		copyto="res\values-##LANG##\strings.xml"
+		//      remove_untranslated_strings_in_final_file="true" (XML only: remove untranslated android strings)
+		//      ignore_spaces="true" (remove all spaces of any kind from source file BEFORE calculating crc)
+        //      auto_replace_before_comparing="replace1" (make some replacements BEFORE calculating crc)
         // 	/>
         // 	<rule origin="en\quick_start.htm"
         // 		copyto="assets\quick_start_##LANG##.htm"
@@ -46,6 +50,7 @@ namespace CrowdinSpreader {
             Console.WriteLine("  source directory contains unpacked translated files from crowdin.net");
         }
         static void Main(string[] args) {
+            System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             if (args.Length < 3) {
                 help();
                 return;
@@ -75,6 +80,19 @@ namespace CrowdinSpreader {
             public Rule(XmlNode node) {
                 this.Origin = node.SelectSingleNode("@origin").InnerText;
                 this.CopyTo = node.SelectSingleNode("@copyto").InnerText;
+                var node_rt = node.SelectSingleNode("@remove_untranslated_strings_in_final_file");
+                this.RemoveUntranslatedStrings = node_rt == null
+                    ? false
+                    : Int32.Parse(node_rt.InnerText) != 0;
+                this.Replacements = new Dictionary<string,string>();
+                var node_rbc = node.SelectSingleNode("@auto_replace_before_comparing");
+                if (node_rbc != null) {
+                    foreach (XmlNode nr in node.ParentNode.SelectNodes(String.Format("auto_replace[@id='{0}']/item", node_rbc.InnerXml))) {
+                        String sfrom = nr.Attributes["from"].InnerText;
+                        String sto= nr.Attributes["to"].InnerText;
+                        this.Replacements.Add(sfrom, sto);
+                    }
+                }
             }
             /// <summary>
             /// Original file with language code equals "en".
@@ -87,19 +105,41 @@ namespace CrowdinSpreader {
             /// ##LANG## will be replaced by appropriate language code.
             /// </summary>
             public String CopyTo { get; private set; }
+            /// <summary>
+            /// Strings like:
+            /// Origin: &lt;string name="label_save"&gt;Save&lt;/string&gt;
+            /// Translated (the same): &lt;string name="label_save"&gt;Save&lt;/string&gt;
+            /// should be removed from dest file after crc-comparing 
+            /// </summary>
+            public bool RemoveUntranslatedStrings { get; private set; }
+            /// <summary>
+            /// Set of replacements, that should be made before calculating CRC
+            /// </summary>
+            public Dictionary<String, String> Replacements { get; private set; }
         }
 
         private static void apply_rule(Rule r, string sourceDir, string targetDir, Dictionary<String, String> langs, StringBuilder log) {
+            bool is_format_android_string_resources = System.IO.Path.GetExtension(r.Origin).ToLower() == ".xml";
+
             String source_path = sourceDir + '\\' + r.Origin; //i.e. CrowdinUnpackedArchive/en/strings.xml
-            Int32 origin_crc = CRC.GetCrc32(GetBinaryFileContent(source_path));
+            String original_file_content = getTextFileContent(source_path, r.Replacements, is_format_android_string_resources);
+            Int32 origin_crc = getCrc(original_file_content, is_format_android_string_resources);
             String filename = System.IO.Path.GetFileName(r.Origin); //i.e. strings.xml
             log.Append(filename + ':');
 
+            RemoverUntranslatedStrings remover_untranslated_strings = r.RemoveUntranslatedStrings
+                ? new RemoverUntranslatedStrings(original_file_content)
+                : null;
+
             foreach (String lang_dir in System.IO.Directory.GetDirectories(sourceDir)) {
+               
                 String lang_code = System.IO.Path.GetFileName(lang_dir); //i.e. de, ru, du, hu, etc.
                 String renamed_lang_code;
                 if (langs.TryGetValue(lang_code, out renamed_lang_code)) {
-                    if (renamed_lang_code.Length == 0) continue; //language should be ignored
+                    if (renamed_lang_code.Length == 0) { //language should be ignored
+                        Console.WriteLine(String.Format("Language {0} was ignored", lang_code));
+                        continue; 
+                    }
                     lang_code = renamed_lang_code;
                 }
 
@@ -108,12 +148,21 @@ namespace CrowdinSpreader {
                     Console.WriteLine(String.Format("File '{0}' isn't found", translated_path));
                     continue;
                 }
-                Int32 translated_crc = CRC.GetCrc32(GetBinaryFileContent(translated_path));
+                String translated_content = getTextFileContent(translated_path, r.Replacements, is_format_android_string_resources); //file with modified content (all replacements are made)
+                Int32 translated_crc = getCrc(translated_content, is_format_android_string_resources);
                 if (origin_crc != translated_crc) {
+                    String dest_content = remover_untranslated_strings == null
+                        ? translated_content
+                        : remover_untranslated_strings.apply(translated_content);
+                    if (is_format_android_string_resources) {
+                        dest_content = make_beautify_xml(dest_content);
+                    }
+                    Int32 dest_crc = getCrc(dest_content, is_format_android_string_resources);
+
                     String copyto_path = targetDir + '\\' + r.CopyTo.Replace("##LANG##", lang_code); //i.e. AndroidProject/res/values-ru/strings.xml
                     if (System.IO.File.Exists(copyto_path)) {
                         Int32 copyto_crc = CRC.GetCrc32(GetBinaryFileContent(copyto_path));
-                        if (copyto_crc != translated_crc) { //AndroidProject/res/values-ru/strings.xml and CrowdinUnpackedArchive/ru/strings.xml are equal
+                        if (copyto_crc != dest_crc) { //AndroidProject/res/values-ru/strings.xml and CrowdinUnpackedArchive/ru/strings.xml are equal
                             System.IO.File.Delete(copyto_path);
                         }
                     }
@@ -123,13 +172,55 @@ namespace CrowdinSpreader {
                             System.IO.Directory.CreateDirectory(copyto_dir); //i.e. create directory AndroidProject/res/values-ru/
                         }
                         //i.e. copy CrowdinUnpackedArchive/ru/strings.xml to AndroidProject/res/values-ru/strings.xml
-                        System.IO.File.Copy(translated_path, copyto_path);
+                        save_utf8_file(dest_content, copyto_path);
+                        //System.IO.File.Copy(translated_path, copyto_path);
                         log.Append(lang_code + ' ');
                     }
                 }
             }
         }
+        static public string make_beautify_xml(String sxml) {
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(sxml);
 
+            StringBuilder sb = new StringBuilder();
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Indent = true;
+            settings.IndentChars = "  ";
+            settings.NewLineChars = "\r\n";
+            settings.NewLineHandling = NewLineHandling.Replace;
+            using (XmlWriter writer = XmlWriter.Create(sb, settings)) {
+                doc.Save(writer);
+            }
+            return sb.ToString();
+        }
+
+        private static void save_utf8_file(string destContent, string destPath) {
+            Utils.SaveStringToFile(destContent, destPath);
+        }
+        public static String getTextFileContent(String fileName, Dictionary<String, String> autoReplacements, bool androidStringResources) {
+            
+            String s;
+            if (androidStringResources) {
+                XmlDocument xml = new XmlDocument();
+                xml.Load(fileName);
+                s = xml.InnerXml;
+            } else {
+                s = Utils.GetFileBody(fileName, "UTF-8");
+            }           
+            
+            if (autoReplacements != null) {
+                foreach (var kvp in autoReplacements) {
+                    s = s.Replace(kvp.Key, kvp.Value);
+                }
+            }
+//             if (androidStringResources) {
+//                 XmlDocument xml = new XmlDocument();
+//                 xml.LoadXml(s);
+//                 return xml.InnerXml;
+//             }
+            return s;
+        }
         public static byte[] GetBinaryFileContent(String FileName) {
             using (System.IO.FileStream f = new System.IO.FileStream(FileName, System.IO.FileMode.Open)) {
                 byte[] bytes = new byte[f.Length];
@@ -138,6 +229,40 @@ namespace CrowdinSpreader {
                 return bytes;
             }
         }
+        static String temp;
+        private static Int32 getCrc(String fileContent, bool androidStringResources) {
+            if (androidStringResources) {
+                XmlDocument xml = new XmlDocument();
+                xml.LoadXml(fileContent);
+                xml.CreateXmlDeclaration("1.0", "utf-8", null);
 
+                Dictionary<String, String> ss = new Dictionary<String, String>();
+                foreach (XmlNode string_node in xml.SelectNodes("resources/string")) {
+                    ss.Add(string_node.Attributes["name"].InnerText, string_node.InnerText.Trim());
+                }
+                StringBuilder sb = new StringBuilder();
+                foreach (var kvp in ss) {
+                    sb.Append(kvp.Key + ":" + kvp.Value + "\n");
+                }
+
+                //!TODO: по непонятной причине путаются два разных двоеточия. 85 - из win1251 откуда-то лезет, хотя везде UTF-8
+                //кроме того, иногда \r\n преобразуется в \n, иногда нет
+                sb.Replace(char.ConvertFromUtf32(8230), "...");
+                sb.Replace(char.ConvertFromUtf32(85), "...");
+                sb.Replace("\r\n", "\n");
+
+                String temp2 = sb.ToString();
+                save_utf8_file(temp, "d:/t/!1.xml");
+                save_utf8_file(temp2, "d:/t/!2.xml");
+                if (temp == null) {
+                    temp = sb.ToString();
+                }
+
+                Int32 dest = CRC.GetCrc32(Encoding.UTF8.GetBytes(sb.ToString()));
+                return dest;
+            } else {
+                return CRC.GetCrc32(Encoding.UTF8.GetBytes(fileContent));
+            }
+        }
     }
 }
