@@ -1,6 +1,9 @@
 ﻿//Copyright 2012 by Victor Derevyanko, dvpublic0@gmail.com, http://code.google.com/p/dvsrc/
 //blog: http://derevyanko.blogspot.com
 
+//"Z:\projects\AnimatedWidget.git\AnimatedWidget\translations\CrowdinSpreaderRules.xml" "Z:\projects\AnimatedWidget.git\AnimatedWidget\translations\crowdin-unzip" "Z:\projects\AnimatedWidget.git\AnimatedWidget\sources"
+//"C:\projects\W3D\translations\CrowdinSpreaderRules.xml" "C:\projects\W3D\translations\crowdin_unzip" "C:\projects\W3D\sources\w3d"
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -82,6 +85,11 @@ namespace CrowdinSpreader {
             public Rule(XmlNode node) {
                 this.Origin = node.SelectSingleNode("@origin").InnerText;
                 this.CopyTo = node.SelectSingleNode("@copyto").InnerText;
+
+                var fn_node = node.SelectSingleNode("@filename");
+                this.Filename = fn_node == null
+                    ? System.IO.Path.GetFileName(this.Origin)
+                    : fn_node.InnerText;
                 var node_rt = node.SelectSingleNode("@remove_untranslated_strings_in_final_file");
                 this.RemoveUntranslatedStrings = node_rt == null
                     ? false
@@ -118,6 +126,8 @@ namespace CrowdinSpreader {
             /// Set of replacements, that should be made before calculating CRC
             /// </summary>
             public Dictionary<String, String> Replacements { get; private set; }
+
+            public String Filename { get; private set; }
         }
 
         private static void apply_rule(Rule r, string sourceDir, string targetDir, Dictionary<String, String> langs, StringBuilder log) {
@@ -126,7 +136,7 @@ namespace CrowdinSpreader {
             String source_path = sourceDir + '\\' + r.Origin; //i.e. CrowdinUnpackedArchive/en/strings.xml
             String original_file_content = getTextFileContent(source_path, r.Replacements, is_format_android_string_resources);
             Int32 origin_crc = getCrc(original_file_content, is_format_android_string_resources);
-            String filename = System.IO.Path.GetFileName(r.Origin); //i.e. strings.xml
+            String filename = r.Filename;
             log.Append(filename + ':');
 
             RemoverUntranslatedStrings remover_untranslated_strings = r.RemoveUntranslatedStrings
